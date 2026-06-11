@@ -20,6 +20,8 @@ public class Compiler {
 
         try {
             BuildModule module = manager.getBuildModule(this.entry);
+            module.parse(manager);
+
             System.out.println(module.toString());
         } catch (CompilerError e) {
             System.err.println(e.getMessage());

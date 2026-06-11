@@ -1,5 +1,7 @@
 package eris.compiler;
 
+import org.apache.commons.text.StringEscapeUtils;
+
 public class Token {
     public final TokenKind kind;
     public final String text;
@@ -18,6 +20,6 @@ public class Token {
             return String.format("<Token %s %d:%d>", kind, line, column);
         }
 
-        return String.format("<Token %s '%s' %d:%d>", kind, text, line, column);
+        return String.format("<Token %s '%s' %d:%d>", kind, StringEscapeUtils.escapeJava(text), line, column);
     }
 }
