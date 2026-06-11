@@ -1,10 +1,13 @@
 package eris.compiler;
 
 import eris.compiler.ast.ASTNode;
+import eris.compiler.Lexer;
 
 import java.io.IOException;
+import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 public class BuildModule {
@@ -16,15 +19,18 @@ public class BuildModule {
     }
 
     public void parse(BuildManager manager) throws CompilerError {
-        String text;
-        try {
-            text = new String(Files.readAllBytes(path));
+        List<Token> tokens = new ArrayList<>();
+        try (Reader reader = Files.newBufferedReader(path)) {
+            Lexer lexer = new Lexer(reader);
+
+            Token token;
+            do {
+                token = lexer.nextToken();
+                tokens.add(token);
+            } while (token.kind != TokenKind.EOF);
         } catch (IOException e) {
             throw new CompilerError(String.format("Could not read %s", path));
         }
-
-        Lexer lexer = new Lexer(text);
-        List<Token> tokens = lexer.lex();
 
         System.out.println("{");
         for (Token token : tokens) {
