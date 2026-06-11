@@ -38,7 +38,7 @@ Identifier = [A-Za-z_][A-Za-z0-9_]*
   ","                       { return token(TokenKind.COMMA); }
   ";"                       { return token(TokenKind.SEMICOLON); }
 
-  {IntegerLiteral}          { return token(TokenKind.NUMBER); }
+  {IntegerLiteral}          { return token(TokenKind.INTEGER); }
   {Identifier}              { return token(TokenKind.IDENTIFIER); }
 
   {WhiteSpace}              {}

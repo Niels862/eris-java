@@ -12,7 +12,7 @@ public enum TokenKind {
 
     RETURN,
 
-    NUMBER,
+    INTEGER,
     STRING,
     IDENTIFIER,
     EOF,

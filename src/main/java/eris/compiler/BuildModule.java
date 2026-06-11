@@ -1,7 +1,6 @@
 package eris.compiler;
 
-import eris.compiler.ast.ASTNode;
-import eris.compiler.Lexer;
+import eris.compiler.ast.AbstractNode;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -12,7 +11,7 @@ import java.util.List;
 
 public class BuildModule {
     private final Path path;
-    private ASTNode root;
+    private AbstractNode root;
 
     public BuildModule(Path path) {
         this.path = path;
@@ -21,7 +20,7 @@ public class BuildModule {
     public void parse(BuildManager manager) throws CompilerError {
         List<Token> tokens = new ArrayList<>();
         try (Reader reader = Files.newBufferedReader(path)) {
-            Lexer lexer = new Lexer(reader);
+            eris.compiler.Lexer lexer = new eris.compiler.Lexer(reader);
 
             Token token;
             do {
@@ -32,11 +31,14 @@ public class BuildModule {
             throw new CompilerError(String.format("Could not read %s", path));
         }
 
-        System.out.println("{");
-        for (Token token : tokens) {
-            System.out.println("  " + token);
-        }
-        System.out.println("}");
+        Parser parser = new Parser(this, tokens);
+        AbstractNode root = parser.parse();
+
+        root.accept(new NodeWriter());
+    }
+
+    public Path getPath() {
+        return path;
     }
 
     public String toString() {
