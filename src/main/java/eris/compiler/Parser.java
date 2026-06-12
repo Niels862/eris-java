@@ -15,7 +15,7 @@ public class Parser {
         this.tokens = tokens;
     }
 
-    AbstractNode parse() throws CompilerError {
+    public ModuleNode parse() throws CompilerError {
         List<FunctionNode> functions = new ArrayList<>();
 
         while (!atEnd()) {

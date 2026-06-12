@@ -1,7 +1,5 @@
 package eris.compiler.ast;
 
-import eris.compiler.NodeVisitor;
-
 import javax.annotation.Nullable;
 
 public class ReturnStatementNode extends StatementNode {

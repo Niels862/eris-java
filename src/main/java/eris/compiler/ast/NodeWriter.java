@@ -1,6 +1,4 @@
-package eris.compiler;
-
-import eris.compiler.ast.*;
+package eris.compiler.ast;
 
 import java.util.List;
 
@@ -8,7 +6,7 @@ public class NodeWriter extends NodeVisitor<Void> {
     private int level;
     
     @Override
-    public Void defaultHandler(AbstractNode node) {
+    public Void defaultHandler(Node node) {
         throw new UnsupportedOperationException();
     }
 
@@ -44,7 +42,12 @@ public class NodeWriter extends NodeVisitor<Void> {
         write(key + ": " + value);
     }
 
-    private <T extends AbstractNode> void write(String key, List<T> nodes) {
+    private <T extends Node> void write(String key, List<T> nodes) {
+        if (nodes.isEmpty()) {
+            write(key + ": []");
+            return;
+        }
+
         write(key + ": [");
         level++;
 
@@ -61,7 +64,7 @@ public class NodeWriter extends NodeVisitor<Void> {
         write("]");
     }
 
-    private void write(String key, AbstractNode node) {
+    private void write(String key, Node node) {
         write(key + ": {");
         level++;
         writeDefault(node);
@@ -76,7 +79,7 @@ public class NodeWriter extends NodeVisitor<Void> {
         }
     }
 
-    private void writeDefault(AbstractNode node) {
+    private void writeDefault(Node node) {
         write("kind", node.getClass().getSimpleName());
     }
 }

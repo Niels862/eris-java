@@ -1,9 +1,7 @@
-package eris.compiler;
-
-import eris.compiler.ast.*;
+package eris.compiler.ast;
 
 public abstract class NodeVisitor<T> {
-    public T defaultHandler(AbstractNode node) {
+    public T defaultHandler(Node node) {
         return null;
     }
 

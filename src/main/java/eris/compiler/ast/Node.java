@@ -1,18 +1,17 @@
 package eris.compiler.ast;
 
-import eris.compiler.NodeVisitor;
 import eris.compiler.Token;
 
-public abstract class AbstractNode {
+public abstract class Node {
     final int line;
     final int column;
 
-    AbstractNode() {
+    Node() {
         this.line = 0;
         this.column = 0;
     }
 
-    AbstractNode(Token token) {
+    Node(Token token) {
         this.line = token.line;
         this.column = token.column;
     }

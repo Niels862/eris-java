@@ -1,10 +1,8 @@
 package eris.compiler.ast;
 
-import eris.compiler.NodeVisitor;
-
 import java.util.List;
 
-public class ModuleNode extends AbstractNode {
+public class ModuleNode extends Node {
     public final List<FunctionNode> functions;
 
     public ModuleNode(List<FunctionNode> functions) {

@@ -1,11 +1,10 @@
 package eris.compiler.ast;
 
-import eris.compiler.NodeVisitor;
 import eris.compiler.Token;
 
 import java.util.List;
 
-public class FunctionNode extends AbstractNode {
+public class FunctionNode extends Node {
     public final String name;
     public final List<StatementNode> statements;
 

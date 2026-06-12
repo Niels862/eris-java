@@ -1,40 +1,33 @@
 package eris.compiler;
 
-import eris.compiler.ast.AbstractNode;
+import eris.compiler.modulestate.ModuleState;
+import eris.compiler.modulestate.ParsedModuleState;
+import eris.compiler.modulestate.PreParsedModuleState;
 
-import java.io.IOException;
-import java.io.Reader;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 
 public class BuildModule {
     private final Path path;
-    private AbstractNode root;
+    private ModuleState state;
 
     public BuildModule(Path path) {
         this.path = path;
     }
 
-    public void parse(BuildManager manager) throws CompilerError {
-        List<Token> tokens = new ArrayList<>();
-        try (Reader reader = Files.newBufferedReader(path)) {
-            eris.compiler.Lexer lexer = new eris.compiler.Lexer(reader);
+    public void preParse() throws CompilerError {
+        if (state == null) {
+            state = PreParsedModuleState.build(this);
+        }
+    }
 
-            Token token;
-            do {
-                token = lexer.nextToken();
-                tokens.add(token);
-            } while (token.kind != TokenKind.EOF);
-        } catch (IOException e) {
-            throw new CompilerError(String.format("Could not read %s", path));
+    public void parse() throws CompilerError {
+        if (!(state instanceof PreParsedModuleState)) {
+            preParse();
         }
 
-        Parser parser = new Parser(this, tokens);
-        AbstractNode root = parser.parse();
-
-        root.accept(new NodeWriter());
+        if (state instanceof PreParsedModuleState preParsedModuleState) {
+            state = ParsedModuleState.build(this, preParsedModuleState);
+        }
     }
 
     public Path getPath() {
@@ -42,6 +35,6 @@ public class BuildModule {
     }
 
     public String toString() {
-        return String.format("<BuildModule at %s>", path);
+        return String.format("<BuildModule at %s : %s>", path, state);
     }
 }
