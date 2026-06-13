@@ -1,12 +1,15 @@
 package eris.compiler.ast;
 
 import eris.compiler.Token;
+import eris.compiler.symbol.SymbolTable;
 
 import java.util.List;
 
 public class FunctionNode extends Node {
     public final String name;
     public final List<StatementNode> statements;
+
+    public SymbolTable scope;
 
     public FunctionNode(Token name, List<StatementNode> statements) {
         super(name);

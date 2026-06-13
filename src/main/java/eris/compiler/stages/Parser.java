@@ -1,5 +1,9 @@
-package eris.compiler;
+package eris.compiler.stages;
 
+import eris.compiler.BuildModule;
+import eris.compiler.CompilerError;
+import eris.compiler.Token;
+import eris.compiler.TokenKind;
 import eris.compiler.ast.*;
 
 import java.util.ArrayList;
@@ -42,14 +46,14 @@ public class Parser {
     }
 
     ReturnStatementNode parseReturnStatement() throws CompilerError {
-        expect(TokenKind.RETURN);
+        Token token = expect(TokenKind.RETURN);
 
         if (accept(TokenKind.SEMICOLON) != null) {
-            return new ReturnStatementNode(null);
+            return new ReturnStatementNode(token, null);
         } else {
             ExpressionNode value = parseExpression();
             expect(TokenKind.SEMICOLON);
-            return new ReturnStatementNode(value);
+            return new ReturnStatementNode(token, value);
         }
     }
 
@@ -80,10 +84,44 @@ public class Parser {
     IntegerNode parseInteger() throws CompilerError {
         Token token = expect(TokenKind.INTEGER);
         try {
-            int value = Integer.parseInt(token.text);
+            String text = token.text;
+            boolean negative = text.startsWith("-");
+            if (negative) {
+                text = text.substring(1);
+            }
+
+            int base;
+            if (text.startsWith("0b")) {
+                base = 2;
+                text = text.substring(2);
+            } else if (text.startsWith("0x")) {
+                base = 16;
+                text = text.substring(2);
+            } else if (text.startsWith("0u")) {
+                base = 1;
+                text = text.substring(2);
+            } else {
+                base = 10;
+            }
+
+            text = text.replace("_", "");
+
+            int value;
+            if (base == 1) {
+                value = text.length();
+                if (negative) {
+                    value = -value;
+                }
+            } else {
+                if (negative) {
+                    text = "-" + text;
+                }
+                value = Integer.parseInt(text, base);
+            }
+
             return new IntegerNode(token, value);
         } catch (NumberFormatException e) {
-            throw new ParserError(token, String.format("Invalid integer value: %s", token.text));
+            throw invalidTokenError(token);
         }
     }
 
@@ -100,7 +138,17 @@ public class Parser {
         if (token.kind == kind) {
             return nextToken();
         }
-        throw new ParserError(token, String.format("Expected %s, but got %s", kind, token.kind));
+
+        if (token.kind.invalidVariantOf == kind) {
+            throw invalidTokenError(token);
+        }
+
+        String str = String.format("Expected %s, but got %s", kind.userString, token.kind.userString);
+        if (token.kind.hasData) {
+            throw new ParserError(token, str + ": " + token.text);
+        } else {
+            throw new ParserError(token, str);
+        }
     }
 
     Token nextToken() {
@@ -123,5 +171,9 @@ public class Parser {
         public ParserError(Token token, String message) {
             super(String.format("%s:%d:%d: %s", module.getPath(), token.line, token.column, message));
         }
+    }
+
+    private ParserError invalidTokenError(Token token) {
+        return new ParserError(token, String.format("Invalid %s: %s", token.kind.userString, token.text));
     }
 }

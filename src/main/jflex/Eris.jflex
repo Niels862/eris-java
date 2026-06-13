@@ -20,7 +20,9 @@ package eris.compiler;
 
 WhiteSpace = [ \t\r|\n|\r\n]
 
-IntegerLiteral = 0 | [1-9][0-9]*
+IntegerLiteral = -? (0 | [1-9][0-9_]*[0-9] | 0x[0-9A-Fa-z_]*[0-9A-Fa-f] | 0b[01_]*[01] | 0u[1_]*1)
+InvalidIntegerLiteral = -? [0-9][A-Za-z0-9_]*
+
 Identifier = [A-Za-z_][A-Za-z0-9_]*
 
 %%
@@ -29,6 +31,7 @@ Identifier = [A-Za-z_][A-Za-z0-9_]*
 <YYINITIAL> {
   "return"                  { return token(TokenKind.RETURN); }
 
+  "->"                      { return token(TokenKind.ARROW); }
   "("                       { return token(TokenKind.LPAREN); }
   ")"                       { return token(TokenKind.RPAREN); }
   "["                       { return token(TokenKind.LBRACKET); }
@@ -39,6 +42,7 @@ Identifier = [A-Za-z_][A-Za-z0-9_]*
   ";"                       { return token(TokenKind.SEMICOLON); }
 
   {IntegerLiteral}          { return token(TokenKind.INTEGER); }
+  {InvalidIntegerLiteral}   { return token(TokenKind.INVALID_INTEGER); }
   {Identifier}              { return token(TokenKind.IDENTIFIER); }
 
   {WhiteSpace}              {}

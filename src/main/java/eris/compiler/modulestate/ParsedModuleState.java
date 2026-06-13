@@ -2,7 +2,7 @@ package eris.compiler.modulestate;
 
 import eris.compiler.BuildModule;
 import eris.compiler.CompilerError;
-import eris.compiler.Parser;
+import eris.compiler.stages.Parser;
 import eris.compiler.ast.ModuleNode;
 import eris.compiler.ast.NodeWriter;
 

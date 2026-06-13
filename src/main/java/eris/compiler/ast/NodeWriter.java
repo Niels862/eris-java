@@ -80,6 +80,6 @@ public class NodeWriter extends NodeVisitor<Void> {
     }
 
     private void writeDefault(Node node) {
-        write("kind", node.getClass().getSimpleName());
+        write(node.getClass().getSimpleName() + " at " + node.line + ":" + node.column);
     }
 }
