@@ -1,27 +1,33 @@
 package eris.compiler.ast;
 
+import eris.compiler.CompilerError;
+
 import java.util.List;
 
 public class NodeWriter extends NodeVisitor<Void> {
     private int level;
-    
+
+    public void write(Node node) throws CompilerError {
+        writeWithPrefix("", node);
+    }
+
     @Override
     public Void defaultHandler(Node node) {
         throw new UnsupportedOperationException();
     }
 
-    public Void visit(ModuleNode node) {
+    public Void visit(ModuleNode node) throws CompilerError {
         write("functions", node.functions);
         return null;
     }
 
-    public Void visit(FunctionNode node) {
+    public Void visit(FunctionNode node) throws CompilerError {
         write("name", node.name);
         write("statements", node.statements);
         return null;
     }
 
-    public Void visit(ReturnStatementNode node) {
+    public Void visit(ReturnStatementNode node) throws CompilerError {
         if (node.value != null) {
             write("value", node.value);
         }
@@ -42,7 +48,7 @@ public class NodeWriter extends NodeVisitor<Void> {
         write(key + ": " + value);
     }
 
-    private <T extends Node> void write(String key, List<T> nodes) {
+    private <T extends Node> void write(String key, List<T> nodes) throws CompilerError {
         if (nodes.isEmpty()) {
             write(key + ": []");
             return;
@@ -52,20 +58,19 @@ public class NodeWriter extends NodeVisitor<Void> {
         level++;
 
         for (T node : nodes) {
-            write("{");
-            level++;
-            writeDefault(node);
-            node.accept(this);
-            level--;
-            write("}");
+            writeWithPrefix("", node);
         }
 
         level--;
         write("]");
     }
 
-    private void write(String key, Node node) {
-        write(key + ": {");
+    private void write(String key, Node node) throws CompilerError {
+        writeWithPrefix(key + ": ", node);
+    }
+
+    private void writeWithPrefix(String prefix, Node node) throws CompilerError {
+        write(prefix + "{");
         level++;
         writeDefault(node);
         node.accept(this);

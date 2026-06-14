@@ -1,5 +1,8 @@
 package eris.compiler.ast;
 
+import eris.compiler.CompilerError;
+import eris.compiler.Token;
+import eris.compiler.symbol.FunctionSymbol;
 import eris.compiler.symbol.SymbolTable;
 
 import java.util.List;
@@ -8,12 +11,14 @@ public class ModuleNode extends Node {
     public final List<FunctionNode> functions;
 
     public SymbolTable globalScope;
+    public FunctionSymbol entrySymbol;
 
-    public ModuleNode(List<FunctionNode> functions) {
+    public ModuleNode(Token token, List<FunctionNode> functions) {
+        super(token);
         this.functions = functions;
     }
 
-    public <T> T accept(NodeVisitor<T> visitor) {
+    public <T> T accept(NodeVisitor<T> visitor) throws CompilerError {
         return visitor.visit(this);
     }
 }

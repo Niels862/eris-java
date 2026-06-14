@@ -1,20 +1,20 @@
 package eris.compiler.ast;
 
+import eris.compiler.CompilerError;
 import eris.compiler.Token;
 
 public abstract class Node {
-    final int line;
-    final int column;
-
-    Node() {
-        this.line = 0;
-        this.column = 0;
-    }
+    public final int line;
+    public final int column;
 
     Node(Token token) {
         this.line = token.line;
         this.column = token.column;
     }
 
-    public abstract <T> T accept(NodeVisitor<T> visitor);
+    public abstract <T> T accept(NodeVisitor<T> visitor) throws CompilerError;
+
+    public String toString() {
+        return String.format("<%s>", getClass().getSimpleName());
+    }
 }

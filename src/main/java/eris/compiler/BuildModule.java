@@ -1,9 +1,6 @@
 package eris.compiler;
 
-import eris.compiler.modulestate.ModuleState;
-import eris.compiler.modulestate.ParsedModuleState;
-import eris.compiler.modulestate.PreParsedModuleState;
-import eris.compiler.modulestate.ScopeBoundModuleState;
+import eris.compiler.modulestate.*;
 
 import java.nio.file.Path;
 
@@ -38,6 +35,16 @@ public class BuildModule {
 
         if (state instanceof ParsedModuleState parsedModuleState) {
             state = ScopeBoundModuleState.build(this, parsedModuleState);
+        }
+    }
+
+    public void generate() throws CompilerError {
+        if (!(state instanceof ScopeBoundModuleState)) {
+            bindSymbols();
+        }
+
+        if (state instanceof ScopeBoundModuleState scopeBoundModuleState) {
+            state = GeneratedModuleState.build(this, scopeBoundModuleState);
         }
     }
 

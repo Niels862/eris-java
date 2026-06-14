@@ -20,6 +20,7 @@ public class Parser {
     }
 
     public ModuleNode parse() throws CompilerError {
+        Token token = getToken();
         List<FunctionNode> functions = new ArrayList<>();
 
         while (!atEnd()) {
@@ -27,17 +28,18 @@ public class Parser {
             functions.add(function);
         }
 
-        return new ModuleNode(functions);
+        return new ModuleNode(token, functions);
     }
 
     FunctionNode parseFunction() throws CompilerError {
-        expect(TokenKind.IDENTIFIER); // Return type, discard
+        expect(TokenKind.FUNC);
         Token name = expect(TokenKind.IDENTIFIER);
         expect(TokenKind.LPAREN);
         expect(TokenKind.RPAREN);
-
+        if (accept(TokenKind.ARROW) != null) {
+            expect(TokenKind.IDENTIFIER);
+        }
         List<StatementNode> statements = parseStatementBlock();
-
         return new FunctionNode(name, statements);
     }
 

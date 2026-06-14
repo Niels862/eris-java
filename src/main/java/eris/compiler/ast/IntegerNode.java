@@ -1,5 +1,6 @@
 package eris.compiler.ast;
 
+import eris.compiler.CompilerError;
 import eris.compiler.Token;
 
 public class IntegerNode extends ExpressionNode {
@@ -11,7 +12,7 @@ public class IntegerNode extends ExpressionNode {
     }
 
     @Override
-    public <T> T accept(NodeVisitor<T> visitor) {
+    public <T> T accept(NodeVisitor<T> visitor) throws CompilerError {
         return visitor.visit(this);
     }
 }

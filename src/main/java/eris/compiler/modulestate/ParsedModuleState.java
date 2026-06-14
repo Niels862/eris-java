@@ -17,8 +17,7 @@ public class ParsedModuleState extends ModuleState {
         Parser parser = new Parser(module, state.getTokens());
         ModuleNode moduleNode = parser.parse();
 
-        NodeWriter writer = new NodeWriter();
-        moduleNode.accept(writer);
+        new NodeWriter().write(moduleNode);
 
         return new ParsedModuleState(moduleNode);
     }

@@ -1,5 +1,6 @@
 package eris.compiler.ast;
 
+import eris.compiler.CompilerError;
 import eris.compiler.Token;
 
 import javax.annotation.Nullable;
@@ -13,7 +14,7 @@ public class ReturnStatementNode extends StatementNode {
         this.value = value;
     }
 
-    public <T> T accept(NodeVisitor<T> visitor) {
+    public <T> T accept(NodeVisitor<T> visitor) throws CompilerError {
         return visitor.visit(this);
     }
 }

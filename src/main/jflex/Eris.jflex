@@ -29,6 +29,7 @@ Identifier = [A-Za-z_][A-Za-z0-9_]*
 
 
 <YYINITIAL> {
+  "func"                    { return token(TokenKind.FUNC); }
   "return"                  { return token(TokenKind.RETURN); }
 
   "->"                      { return token(TokenKind.ARROW); }

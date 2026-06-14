@@ -11,6 +11,7 @@ public enum TokenKind {
     COMMA(","),
     SEMICOLON(";"),
 
+    FUNC("func"),
     RETURN("return"),
 
     INTEGER("integer", true),

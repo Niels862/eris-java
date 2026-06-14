@@ -1,9 +1,9 @@
 package eris.compiler.symbol;
 
 public abstract class Symbol {
-    private final String name;
-    private final int line;
-    private final int column;
+    public final String name;
+    public final int line;
+    public final int column;
 
     public Symbol(String name, int line, int column) {
         this.name = name;
@@ -11,7 +11,5 @@ public abstract class Symbol {
         this.column = column;
     }
 
-    public String getName() {
-        return name;
-    }
+    public abstract String toString();
 }

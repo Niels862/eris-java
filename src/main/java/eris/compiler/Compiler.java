@@ -20,7 +20,7 @@ public class Compiler {
 
         try {
             BuildModule module = manager.getBuildModule(this.entry);
-            module.bindSymbols();
+            module.generate();
 
             System.out.println(module);
         } catch (CompilerError e) {
