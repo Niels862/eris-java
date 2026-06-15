@@ -21,6 +21,10 @@ public class ConstantManager {
         return constant;
     }
 
+    public List<Constant> getConstants() {
+        return constants;
+    }
+
     private <T extends Constant, U> void insert(T constant, U key, Map<U, T> map) {
         map.put(key, constant);
         constants.add(constant);

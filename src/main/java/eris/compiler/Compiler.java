@@ -1,5 +1,7 @@
 package eris.compiler;
 
+import eris.module.Module;
+
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -18,15 +20,15 @@ public class Compiler {
 
         BuildManager manager = new BuildManager(sourcePaths);
 
+        List<Module> compiledModules = new ArrayList<>();
         try {
             BuildModule module = manager.getBuildModule(this.entry);
-            module.generate();
-
-            System.out.println(module);
+            compiledModules.add(module.compile());
+            compiledModules.addAll(manager.getCompiledDependencyModules(module));
         } catch (CompilerError e) {
             System.err.println(e.getMessage());
         }
 
-        return new ArrayList<>();
+        return compiledModules;
     }
 }

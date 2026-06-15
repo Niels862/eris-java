@@ -1,16 +1,16 @@
 package eris.module.constant;
 
 public class FunctionConstant extends Constant {
-    public final String name;
-    public final byte[] code;
+    public final ModuleConstant module;
+    public final StringConstant name;
 
-    public FunctionConstant(String name, byte[] code) {
+    public FunctionConstant(ModuleConstant module, StringConstant name) {
+        this.module = module;
         this.name = name;
-        this.code = code;
     }
 
     @Override
     public String toString() {
-        return "Function " + name;
+        return "Function " + module.name + "::" + name;
     }
 }

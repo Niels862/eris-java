@@ -1,7 +1,10 @@
 package eris.compiler;
 
+import eris.module.Module;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,20 +22,32 @@ public class BuildManager {
             return modules.get(name);
         }
 
-        String erisName = moduleNameToErisPath(name);
+        String erisFileName = moduleNameToErisPath(name);
 
         for (Path sourcePath : sourcePaths) {
-            Path path = sourcePath.resolve(erisName);
+            Path path = sourcePath.resolve(erisFileName);
 
             if (Files.exists(path) && Files.isRegularFile(path)) {
-                BuildModule module = new BuildModule(path);
+                BuildModule module = new BuildModule(name, path);
 
-                modules.put(erisName, module);
+                modules.put(name, module);
                 return module;
             }
         }
 
         throw new CompilerError(String.format("Could not find name '%s' in source paths", name));
+    }
+
+    public List<Module> getCompiledDependencyModules(BuildModule entryModule) throws CompilerError {
+        List<Module> compiledModules = new ArrayList<>();
+
+        for (BuildModule module : modules.values()) {
+            if (!module.equals(entryModule)) {
+                compiledModules.add(module.compile());
+            }
+        }
+
+        return compiledModules;
     }
 
     private String moduleNameToErisPath(String moduleName) {

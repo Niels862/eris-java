@@ -35,7 +35,7 @@ public class GeneratedModuleState extends ModuleState {
         return functions;
     }
 
-    public ConstantManager getConstants() {
+    public ConstantManager getConstantManager() {
         return constants;
     }
 }

@@ -1,14 +1,17 @@
 package eris.compiler;
 
 import eris.compiler.modulestate.*;
+import eris.module.Module;
 
 import java.nio.file.Path;
 
 public class BuildModule {
+    private final String name;
     private final Path path;
     private ModuleState state;
 
-    public BuildModule(Path path) {
+    public BuildModule(String name, Path path) {
+        this.name = name;
         this.path = path;
     }
 
@@ -46,6 +49,26 @@ public class BuildModule {
         if (state instanceof ScopeBoundModuleState scopeBoundModuleState) {
             state = GeneratedModuleState.build(this, scopeBoundModuleState);
         }
+    }
+
+    public Module compile() throws CompilerError {
+        if (!(state instanceof GeneratedModuleState)) {
+            generate();
+        }
+
+        if (state instanceof GeneratedModuleState generatedModuleState) {
+            state = CompiledModuleState.build(this, generatedModuleState);
+        }
+
+        if (state instanceof CompiledModuleState compiledModuleState) {
+            return compiledModuleState.getCompiledModule();
+        } else {
+            throw new RuntimeException("Unexpected state: " + state);
+        }
+    }
+
+    public String getName() {
+        return name;
     }
 
     public Path getPath() {

@@ -5,9 +5,9 @@ import eris.compiler.ir.IntermediateBlock;
 import eris.compiler.symbol.Symbol;
 
 public class BuildFunction {
-    private final Node node;
-    private final Symbol symbol;
-    private final IntermediateBlock block;
+    public final Node node;
+    public final Symbol symbol;
+    public final IntermediateBlock block;
 
     public BuildFunction(Node node, Symbol symbol, IntermediateBlock block) {
         this.node = node;
