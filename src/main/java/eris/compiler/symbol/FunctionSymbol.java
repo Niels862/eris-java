@@ -5,6 +5,7 @@ public class FunctionSymbol extends Symbol {
         super(name, line, column);
     }
 
+    @Override
     public String toString() {
         return String.format("<Function %s>", name);
     }
