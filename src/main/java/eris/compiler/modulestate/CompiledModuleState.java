@@ -2,7 +2,7 @@ package eris.compiler.modulestate;
 
 import eris.compiler.BuildFunction;
 import eris.compiler.BuildModule;
-import eris.compiler.stages.ByteCodeCompiler;
+import eris.compiler.stages.FunctionCompiler;
 import eris.compiler.stages.ConstantManager;
 import eris.module.Function;
 import eris.module.Module;
@@ -23,7 +23,7 @@ public class CompiledModuleState extends ModuleState {
 
         List<Function> functions = new ArrayList<>();
         for (BuildFunction function : generatedModuleState.getFunctions()) {
-            ByteCodeCompiler compiler = new ByteCodeCompiler(function, constantManager);
+            FunctionCompiler compiler = new FunctionCompiler(function, constantManager);
             functions.add(compiler.compile());
         }
 

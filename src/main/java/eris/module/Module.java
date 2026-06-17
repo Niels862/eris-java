@@ -30,11 +30,12 @@ public class Module {
         System.out.println("Module " + this.name);
         System.out.println("Constants:");
         for (int i = 0; i < this.constants.size(); i++) {
-            System.out.println("  [" + i + "]: " + this.constants.get(i));
+            System.out.println("[" + i + "]: " + this.constants.get(i));
         }
         System.out.println("Functions:");
         for (int i = 0; i < this.functions.size(); i++) {
-            System.out.println("  [" + i + "]: " + this.functions.get(i));
+            System.out.print("[" + i + "]: ");
+            this.functions.get(i).dump();
         }
         System.out.println();
     }
