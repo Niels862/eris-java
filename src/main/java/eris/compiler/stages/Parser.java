@@ -171,7 +171,7 @@ public class Parser {
 
     public class ParserError extends CompilerError {
         public ParserError(Token token, String message) {
-            super(String.format("%s:%d:%d: %s", module.getPath(), token.line, token.column, message));
+            super(String.format("%s:%d:%d: %s", module.path, token.line, token.column, message));
         }
     }
 

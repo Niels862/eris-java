@@ -2,9 +2,7 @@ package eris.module;
 
 import eris.module.constant.Constant;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class Module {
     public final String name;

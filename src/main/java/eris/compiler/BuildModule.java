@@ -6,8 +6,9 @@ import eris.module.Module;
 import java.nio.file.Path;
 
 public class BuildModule {
-    private final String name;
-    private final Path path;
+    public final String name;
+    public final Path path;
+
     private ModuleState state;
 
     public BuildModule(String name, Path path) {
@@ -65,14 +66,6 @@ public class BuildModule {
         } else {
             throw new RuntimeException("Unexpected state: " + state);
         }
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public Path getPath() {
-        return path;
     }
 
     public String toString() {

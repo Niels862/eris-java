@@ -28,7 +28,7 @@ public class CompiledModuleState extends ModuleState {
         }
 
         List<Constant> constants = constantManager.getConstants();
-        Module compiledModule = new Module(module.getName(), functions, constants);
+        Module compiledModule = new Module(module.name, functions, constants);
 
         compiledModule.dump();
 

@@ -21,16 +21,18 @@ public class PreParsedModuleState extends ModuleState {
     public static PreParsedModuleState build(BuildModule module) throws CompilerError {
         List<Token> tokens = new ArrayList<>();
 
-        try (Reader reader = Files.newBufferedReader(module.getPath())) {
-            eris.compiler.Lexer lexer = new eris.compiler.Lexer(reader);
+        try {
+            try (Reader reader = Files.newBufferedReader(module.path)) {
+                eris.compiler.Lexer lexer = new eris.compiler.Lexer(reader);
 
-            Token token;
-            do {
-                token = lexer.nextToken();
-                tokens.add(token);
-            } while (token.kind != TokenKind.EOF);
+                Token token;
+                do {
+                    token = lexer.nextToken();
+                    tokens.add(token);
+                } while (token.kind != TokenKind.EOF);
+            }
         } catch (IOException e) {
-            throw new CompilerError(String.format("Could not read %s", module.getPath()));
+            throw new CompilerError(String.format("Could not read %s", module.path));
         }
 
         return new PreParsedModuleState(tokens);

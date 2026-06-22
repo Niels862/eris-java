@@ -4,29 +4,33 @@ import eris.module.Function;
 import eris.module.Instruction;
 import eris.module.Module;
 import eris.module.constant.Constant;
+import eris.module.constant.FunctionReferenceConstant;
+
+import eris.runtime.LoadedModule.ResolvedFunctionReference;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
 public class Interpreter {
-    private final Module entryModule;
+    private final LoadedModule entryModule;
+    private final ModuleManager manager = new ModuleManager();
 
     private final List<Object> stack = new ArrayList<>();
     private final Stack<CallFrame> callStack = new Stack<>();
 
-    private Module module;
+    private LoadedModule module;
     private Function function;
     private List<Constant> constants;
     private Instruction[] code;
     private int instructionPointer;
 
     public Interpreter(Module module) {
-        this.entryModule = module;
+        this.entryModule = manager.addModule(module);;
     }
 
     public void run() {
-        Function entryFunction = entryModule.lookupFunction("main");
+        Function entryFunction = entryModule.getEntryFunction();
         if (entryFunction == null) {
             throw new RuntimeException("Entry function not found");
         }
@@ -34,11 +38,14 @@ public class Interpreter {
         runFromEntryFunction(entryModule, entryFunction);
     }
 
-    public void runFromEntryFunction(Module module, Function entry) {
+    public void runFromEntryFunction(LoadedModule module, Function entry) {
         enterFunction(module, entry);
 
-        while (!callStack.empty()) {
+        while (this.function != null) {
+            System.out.println(function + " " + instructionPointer);
+
             Instruction instruction = code[instructionPointer];
+            System.out.println(">> " + instruction);
             instructionPointer++;
 
             runInstruction(instruction);
@@ -47,25 +54,39 @@ public class Interpreter {
         dumpStack();
     }
 
-    public void enterFunction(Module module, Function function) {
-        CallFrame frame = new CallFrame(this.module, this.function, constants, code, instructionPointer);
-        callStack.push(frame);
+    public void enterFunction(LoadedModule module, Function function) {
+        if (this.function != null) {
+            CallFrame frame = new CallFrame(this.module, this.function, instructionPointer);
+            callStack.push(frame);
+        }
 
         this.module = module;
         this.function = function;
         this.constants = module.constants;
         this.code = function.code;
         this.instructionPointer = 0;
+
+        System.out.println("Entering function " + function + " at " + instructionPointer);
     }
 
     public void exitFunction() {
-        CallFrame frame = callStack.pop();
+        System.out.println("Exiting function " + function);
 
-        this.module = frame.module;
-        this.function = frame.function;
-        this.constants = frame.constants;
-        this.code = frame.code;
-        this.instructionPointer = frame.instructionPointer;
+        if (callStack.isEmpty()) {
+            this.module = null;
+            this.function = null;
+            this.constants = null;
+            this.code = null;
+            this.instructionPointer = 0;
+        } else {
+            CallFrame frame = callStack.pop();
+
+            this.module = frame.module;
+            this.function = frame.function;
+            this.constants = frame.module.constants;
+            this.code = frame.function.code;
+            this.instructionPointer = frame.instructionPointer;
+        }
     }
 
     public void runInstruction(Instruction instruction) {
@@ -75,6 +96,14 @@ public class Interpreter {
             case LOAD_CONST: {
                 Constant constant = constants.get(argument);
                 stack.add(constant);
+                break;
+            }
+
+            case CALL: {
+                Constant constant = constants.get(argument);
+                FunctionReferenceConstant reference = (FunctionReferenceConstant) constant;
+                ResolvedFunctionReference resolved = module.resolveFunction(reference);
+                enterFunction(resolved.module, resolved.function);
                 break;
             }
 
@@ -93,10 +122,8 @@ public class Interpreter {
     }
 
     private record CallFrame(
-            Module module,
+            LoadedModule module,
             Function function,
-            List<Constant> constants,
-            Instruction[] code,
             int instructionPointer) {
     }
 }

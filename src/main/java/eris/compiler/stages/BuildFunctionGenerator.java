@@ -7,9 +7,8 @@ import eris.compiler.ast.*;
 import eris.compiler.ir.*;
 import eris.compiler.symbol.Symbol;
 import eris.module.constant.Constant;
+import eris.module.constant.FunctionReferenceConstant;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Queue;
 
 public class BuildFunctionGenerator extends NodeVisitor<Void> {
@@ -38,6 +37,9 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
 
     @Override
     public Void visit(ModuleNode node) throws CompilerError {
+        FunctionReferenceConstant entry = constants.getFunctionReferenceConstant(module.name, "main");
+        emit(new Call(entry));
+
         for (FunctionNode functionNode : node.functions) {
             functionNode.accept(generator);
         }
@@ -56,11 +58,11 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         return null;
     }
 
-    private class StatementGenerator extends NodeVisitor<Void> {
-        public void emit(IntermediateInstruction instruction) {
-            block.instructions.add(instruction);
-        }
+    public void emit(IntermediateInstruction instruction) {
+        block.instructions.add(instruction);
+    }
 
+    private class StatementGenerator extends NodeVisitor<Void> {
         @Override
         public Void visit(FunctionNode node) {
             taskQueue.add(node);

@@ -2,10 +2,7 @@ package eris.compiler.stages;
 
 import eris.compiler.BuildFunction;
 import eris.compiler.CompilerError;
-import eris.compiler.ir.IntermediateInstruction;
-import eris.compiler.ir.IntermediateInstructionVisitor;
-import eris.compiler.ir.LoadConstant;
-import eris.compiler.ir.Return;
+import eris.compiler.ir.*;
 import eris.module.Function;
 import eris.module.Instruction;
 import eris.module.OpCode;
@@ -52,6 +49,12 @@ public class FunctionCompiler {
         @Override
         public Void visit(LoadConstant instruction) {
             emit(OpCode.LOAD_CONST, constants.getIndexOf(instruction.constant));
+            return null;
+        }
+
+        @Override
+        public Void visit(Call instruction) throws CompilerError {
+            emit(OpCode.CALL, constants.getIndexOf(instruction.reference));
             return null;
         }
 

@@ -12,6 +12,10 @@ public abstract class IntermediateInstructionVisitor<T> {
         return defaultHandler(instruction);
     }
 
+    public T visit(Call instruction) throws CompilerError {
+        return defaultHandler(instruction);
+    }
+
     public T visit(Return instruction) throws CompilerError {
         return defaultHandler(instruction);
     }

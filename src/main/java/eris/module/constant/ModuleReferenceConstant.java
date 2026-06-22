@@ -1,9 +1,9 @@
 package eris.module.constant;
 
-public class ModuleConstant extends Constant {
+public class ModuleReferenceConstant extends Constant {
     public final StringConstant name;
 
-    public ModuleConstant(StringConstant name) {
+    public ModuleReferenceConstant(StringConstant name) {
         this.name = name;
     }
 
