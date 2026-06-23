@@ -2,7 +2,7 @@ package eris.compiler.modulestate;
 
 import eris.compiler.BuildFunction;
 import eris.compiler.BuildModule;
-import eris.compiler.stages.FunctionCompiler;
+import eris.compiler.stages.FunctionGenerator;
 import eris.compiler.stages.ConstantManager;
 import eris.module.Function;
 import eris.module.Module;
@@ -19,11 +19,11 @@ public class CompiledModuleState extends ModuleState {
     }
 
     public static CompiledModuleState build(BuildModule module, GeneratedModuleState generatedModuleState) {
-        ConstantManager constantManager = generatedModuleState.getConstantManager();
+        ConstantManager constantManager = new ConstantManager();
 
         List<Function> functions = new ArrayList<>();
         for (BuildFunction function : generatedModuleState.getFunctions()) {
-            FunctionCompiler compiler = new FunctionCompiler(function, constantManager);
+            FunctionGenerator compiler = new FunctionGenerator(function, constantManager);
             functions.add(compiler.compile());
         }
 

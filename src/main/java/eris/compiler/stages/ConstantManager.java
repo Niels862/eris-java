@@ -1,5 +1,7 @@
 package eris.compiler.stages;
 
+import eris.compiler.BuildModule;
+import eris.compiler.symbol.FunctionSymbol;
 import eris.module.constant.*;
 
 import java.util.ArrayList;
@@ -10,31 +12,30 @@ import java.util.Map;
 public class ConstantManager {
     private final List<Constant> constants = new ArrayList<>();
 
-    private final Map<String, ModuleReferenceConstant> moduleReferenceConstants = new HashMap<>();
-    private final Map<String, FunctionReferenceConstant> functionReferenceConstants = new HashMap<>();
+    private final Map<BuildModule, ModuleReferenceConstant> moduleReferenceConstants = new HashMap<>();
+    private final Map<FunctionSymbol, FunctionReferenceConstant> functionReferenceConstants = new HashMap<>();
     private final Map<Integer, IntegerConstant> integerConstants = new HashMap<>();
     private final Map<String, StringConstant> stringConstants = new HashMap<>();
 
     private final Map<Constant, Integer> invertedIndexMap = new HashMap<>();
 
-    public ModuleReferenceConstant getModuleReferenceConstant(String name) {
-        ModuleReferenceConstant constant = moduleReferenceConstants.get(name);
+    public ModuleReferenceConstant getModuleReferenceConstant(BuildModule module) {
+        ModuleReferenceConstant constant = moduleReferenceConstants.get(module);
         if (constant == null) {
-            StringConstant nameConstant = getStringConstant(name);
+            StringConstant nameConstant = getStringConstant(module.name);
             constant = new ModuleReferenceConstant(nameConstant);
-            insert(constant, name, moduleReferenceConstants);
+            insert(constant, module, moduleReferenceConstants);
         }
         return constant;
     }
 
-    public FunctionReferenceConstant getFunctionReferenceConstant(String moduleName, String functionName) {
-        String key = moduleName + "::" + functionName;
-        FunctionReferenceConstant constant = functionReferenceConstants.get(key);
+    public FunctionReferenceConstant getFunctionReferenceConstant(FunctionSymbol function) {
+        FunctionReferenceConstant constant = functionReferenceConstants.get(function);
         if (constant == null) {
-            ModuleReferenceConstant moduleReference = getModuleReferenceConstant(moduleName);
-            StringConstant nameConstant = getStringConstant(functionName);
+            ModuleReferenceConstant moduleReference = getModuleReferenceConstant(function.module);
+            StringConstant nameConstant = getStringConstant(function.name);
             constant = new FunctionReferenceConstant(moduleReference, nameConstant);
-            insert(constant, key, functionReferenceConstants);
+            insert(constant, function, functionReferenceConstants);
         }
         return constant;
     }

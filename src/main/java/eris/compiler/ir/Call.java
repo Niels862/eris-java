@@ -1,14 +1,15 @@
 package eris.compiler.ir;
 
 import eris.compiler.CompilerError;
+import eris.compiler.symbol.FunctionSymbol;
 import eris.module.constant.Constant;
 import eris.module.constant.FunctionReferenceConstant;
 
 public class Call extends IntermediateInstruction {
-    public final FunctionReferenceConstant reference;
+    public final FunctionSymbol function;
 
-    public Call(FunctionReferenceConstant reference) {
-        this.reference = reference;
+    public Call(FunctionSymbol function) {
+        this.function = function;
     }
 
     public <T> T accept(IntermediateInstructionVisitor<T> visitor) throws CompilerError {
@@ -16,6 +17,6 @@ public class Call extends IntermediateInstruction {
     }
 
     public String toString() {
-        return "CALL " + reference;
+        return "CALL " + function.name;
     }
 }

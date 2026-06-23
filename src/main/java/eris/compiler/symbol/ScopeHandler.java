@@ -2,8 +2,6 @@ package eris.compiler.symbol;
 
 import eris.compiler.CompilerError;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Stack;
 
 public class ScopeHandler {
@@ -16,9 +14,14 @@ public class ScopeHandler {
         return symbolTable;
     }
 
-    public void leaveScope(SymbolTable scope) {
+    public void enterScope(SymbolTable symbolTable) {
+        assert symbolTable != null;
+        enteredScopes.push(symbolTable);
+    }
+
+    public void leaveScope(SymbolTable symbolTable) {
         SymbolTable top = enteredScopes.pop();
-        assert top == scope;
+        assert top == symbolTable;
     }
 
     public void insert(String name, Symbol symbol) throws CompilerError {

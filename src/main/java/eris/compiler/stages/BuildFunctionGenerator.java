@@ -5,45 +5,72 @@ import eris.compiler.BuildModule;
 import eris.compiler.CompilerError;
 import eris.compiler.ast.*;
 import eris.compiler.ir.*;
+import eris.compiler.symbol.FunctionSymbol;
+import eris.compiler.symbol.ScopeHandler;
 import eris.compiler.symbol.Symbol;
+import eris.compiler.symbol.SymbolTable;
 import eris.module.constant.Constant;
 import eris.module.constant.FunctionReferenceConstant;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Queue;
 
 public class BuildFunctionGenerator extends NodeVisitor<Void> {
     private final BuildModule module;
-    private final ConstantManager constants;
-    private final Node node;
 
-    private final Queue<Node> taskQueue;
+    private final Queue<Task> taskQueue = new ArrayDeque<>();
     private final StatementGenerator generator = new StatementGenerator();
     private Symbol symbol;
+    private final ScopeHandler scopeHandler = new ScopeHandler();
 
-    private final IntermediateBlock block = new IntermediateBlock(0);
+    private IntermediateBlock block;
 
-    public BuildFunctionGenerator(BuildModule module, ConstantManager constants, Node node, Queue<Node> taskQueue) {
+    public BuildFunctionGenerator(BuildModule module) {
         this.module = module;
-        this.constants = constants;
-        this.node = node;
-        this.taskQueue = taskQueue;
     }
 
-    public BuildFunction generate() throws CompilerError {
-        node.accept(this);
+    public List<BuildFunction> generate(ModuleNode moduleNode) throws CompilerError {
+        List<BuildFunction> functions = new ArrayList<>();
+
+        taskQueue.add(new Task(moduleNode, null));
+        while (!taskQueue.isEmpty()) {
+            Task task = taskQueue.remove();
+            BuildFunction function = buildTask(task);
+            functions.add(function);
+        }
+
+        return functions;
+    }
+
+    private BuildFunction buildTask(Task task) throws CompilerError {
+        block = new IntermediateBlock(0);
+        if (task.enclosing != null) {
+            scopeHandler.enterScope(task.enclosing);
+        }
+        task.node.accept(this);
         assert symbol != null;
-        return new BuildFunction(node, symbol, block);
+        if (task.enclosing != null) {
+            scopeHandler.leaveScope(task.enclosing);
+        }
+        return new BuildFunction(task.node, symbol, block);
     }
 
     @Override
     public Void visit(ModuleNode node) throws CompilerError {
-        FunctionReferenceConstant entry = constants.getFunctionReferenceConstant(module.name, "main");
-        emit(new Call(entry));
+        scopeHandler.enterScope(node.globalScope);
+
+        Symbol mainSymbol = scopeHandler.getSymbolTable().lookup("main");
+        if (mainSymbol instanceof FunctionSymbol mainFunctionSymbol) {
+            emit(new Call(mainFunctionSymbol));
+        }
 
         for (FunctionNode functionNode : node.functions) {
             functionNode.accept(generator);
         }
 
+        scopeHandler.leaveScope(node.globalScope);
         symbol = node.entrySymbol;
         return null;
     }
@@ -65,7 +92,7 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
     private class StatementGenerator extends NodeVisitor<Void> {
         @Override
         public Void visit(FunctionNode node) {
-            taskQueue.add(node);
+            addTask(node);
             return null;
         }
 
@@ -82,9 +109,17 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
 
         @Override
         public Void visit(IntegerNode node) {
-            Constant constant = constants.getIntegerConstant(node.value);
-            emit(new LoadConstant(constant));
+            emit(new LoadConstant(node.value));
             return null;
         }
+
+        private void addTask(Node node) {
+            taskQueue.add(new Task(node, scopeHandler.getSymbolTable()));
+        }
     }
+
+    private record Task(
+            Node node,
+            SymbolTable enclosing
+    ) {}
 }

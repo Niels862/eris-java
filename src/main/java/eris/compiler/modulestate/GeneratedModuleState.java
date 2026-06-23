@@ -3,39 +3,31 @@ package eris.compiler.modulestate;
 import eris.compiler.BuildFunction;
 import eris.compiler.BuildModule;
 import eris.compiler.CompilerError;
+import eris.compiler.stages.BuildFunctionGenerator;
 import eris.compiler.stages.ConstantManager;
-import eris.compiler.stages.IntermediateCodeGenerator;
 
 import java.util.List;
 
 public class GeneratedModuleState extends ModuleState {
     private final List<BuildFunction> functions;
-    private final ConstantManager constants;
 
-    public GeneratedModuleState(List<BuildFunction> functions, ConstantManager constants) {
+    public GeneratedModuleState(List<BuildFunction> functions) {
         this.functions = functions;
-        this.constants = constants;
     }
 
     public static GeneratedModuleState build(BuildModule module, ScopeBoundModuleState state) throws CompilerError {
-        ConstantManager constants = new ConstantManager();
-
-        IntermediateCodeGenerator generator = new IntermediateCodeGenerator(module, state.getModuleNode(), constants);
-        List<BuildFunction> functions = generator.generate();
+        BuildFunctionGenerator generator = new BuildFunctionGenerator(module);
+        List<BuildFunction> functions = generator.generate(state.getModuleNode());
 
         for (BuildFunction function : functions) {
             function.dump();
             System.out.println();
         }
 
-        return new GeneratedModuleState(functions, constants);
+        return new GeneratedModuleState(functions);
     }
 
     public List<BuildFunction> getFunctions() {
         return functions;
-    }
-
-    public ConstantManager getConstantManager() {
-        return constants;
     }
 }

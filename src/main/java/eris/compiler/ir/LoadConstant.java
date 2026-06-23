@@ -5,9 +5,9 @@ import eris.compiler.ast.NodeVisitor;
 import eris.module.constant.Constant;
 
 public class LoadConstant extends IntermediateInstruction {
-    public final Constant constant;
+    public final Object constant;
 
-    public LoadConstant(Constant constant) {
+    public LoadConstant(Object constant) {
         this.constant = constant;
     }
 

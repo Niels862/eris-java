@@ -6,17 +6,19 @@ import eris.compiler.ir.*;
 import eris.module.Function;
 import eris.module.Instruction;
 import eris.module.OpCode;
+import eris.module.constant.Constant;
+import eris.module.constant.FunctionReferenceConstant;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class FunctionCompiler {
+public class FunctionGenerator {
     private final BuildFunction function;
     private final ConstantManager constants;
 
     private final List<Instruction> code = new ArrayList<>();
 
-    public FunctionCompiler(BuildFunction function, ConstantManager constants) {
+    public FunctionGenerator(BuildFunction function, ConstantManager constants) {
         this.function = function;
         this.constants = constants;
     }
@@ -48,13 +50,21 @@ public class FunctionCompiler {
 
         @Override
         public Void visit(LoadConstant instruction) {
-            emit(OpCode.LOAD_CONST, constants.getIndexOf(instruction.constant));
+            Constant constant;
+            if (instruction.constant instanceof Integer integer) {
+                constant = constants.getIntegerConstant(integer);
+            } else {
+                throw new RuntimeException("Unexpected constant type: " + instruction.constant);
+            }
+
+            emit(OpCode.LOAD_CONST, constants.getIndexOf(constant));
             return null;
         }
 
         @Override
         public Void visit(Call instruction) throws CompilerError {
-            emit(OpCode.CALL, constants.getIndexOf(instruction.reference));
+            FunctionReferenceConstant constant = constants.getFunctionReferenceConstant(instruction.function);
+            emit(OpCode.CALL, constants.getIndexOf(constant));
             return null;
         }
 

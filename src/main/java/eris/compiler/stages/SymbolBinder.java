@@ -29,7 +29,7 @@ public class SymbolBinder extends NodeVisitor<Void> {
         }
         scopeHandler.leaveScope(node.globalScope);
 
-        node.entrySymbol = new FunctionSymbol("$entry", node.line, node.column);
+        node.entrySymbol = new FunctionSymbol("$entry", module, node.line, node.column);
         return null;
     }
 
@@ -40,7 +40,7 @@ public class SymbolBinder extends NodeVisitor<Void> {
         }
         scopeHandler.leaveScope(node.scope);
 
-        node.symbol = new FunctionSymbol(node.name, node.line, node.column);
+        node.symbol = new FunctionSymbol(node.name, module, node.line, node.column);
         scopeHandler.insert(node.name, node.symbol);
         return null;
     }
