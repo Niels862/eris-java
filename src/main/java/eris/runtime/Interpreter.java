@@ -18,12 +18,14 @@ public class Interpreter {
 
     private final List<Object> stack = new ArrayList<>();
     private final Stack<CallFrame> callStack = new Stack<>();
+    private boolean halted = false;
 
     private LoadedModule module;
     private Function function;
     private List<Constant> constants;
     private Instruction[] code;
     private int instructionPointer;
+    private int basePointer;
 
     public Interpreter(Module module) {
         this.entryModule = manager.addModule(module);;
@@ -41,7 +43,7 @@ public class Interpreter {
     public void runFromEntryFunction(LoadedModule module, Function entry) {
         enterFunction(module, entry);
 
-        while (this.function != null) {
+        while (!halted) {
             System.out.println(function + " " + instructionPointer);
 
             Instruction instruction = code[instructionPointer];
@@ -56,7 +58,7 @@ public class Interpreter {
 
     public void enterFunction(LoadedModule module, Function function) {
         if (this.function != null) {
-            CallFrame frame = new CallFrame(this.module, this.function, instructionPointer);
+            CallFrame frame = new CallFrame(this.module, this.function, instructionPointer, basePointer);
             callStack.push(frame);
         }
 
@@ -65,6 +67,7 @@ public class Interpreter {
         this.constants = module.constants;
         this.code = function.code;
         this.instructionPointer = 0;
+        this.basePointer = stack.size() - function.numArgs;
 
         System.out.println("Entering function " + function + " at " + instructionPointer);
     }
@@ -72,12 +75,14 @@ public class Interpreter {
     public void exitFunction() {
         System.out.println("Exiting function " + function);
 
+        Object returnValue = stack.getLast();
+        while (stack.size() > basePointer) {
+            stack.removeLast();
+        }
+        stack.add(returnValue);
+
         if (callStack.isEmpty()) {
-            this.module = null;
-            this.function = null;
-            this.constants = null;
-            this.code = null;
-            this.instructionPointer = 0;
+            throw new RuntimeException("Cannot return from entry function");
         } else {
             CallFrame frame = callStack.pop();
 
@@ -86,6 +91,7 @@ public class Interpreter {
             this.constants = frame.module.constants;
             this.code = frame.function.code;
             this.instructionPointer = frame.instructionPointer;
+            this.basePointer = frame.basePointer;
         }
     }
 
@@ -111,6 +117,11 @@ public class Interpreter {
                 exitFunction();
                 break;
             }
+
+            case HALT: {
+                halted = true;
+                break;
+            }
         }
     }
 
@@ -124,6 +135,7 @@ public class Interpreter {
     private record CallFrame(
             LoadedModule module,
             Function function,
-            int instructionPointer) {
+            int instructionPointer,
+            int basePointer) {
     }
 }

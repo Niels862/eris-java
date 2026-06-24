@@ -64,6 +64,9 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         Symbol mainSymbol = scopeHandler.getSymbolTable().lookup("main");
         if (mainSymbol instanceof FunctionSymbol mainFunctionSymbol) {
             emit(new Call(mainFunctionSymbol));
+            emit(new Halt());
+        } else {
+            throw new CompilerError(module, "Module does not have a main function");
         }
 
         for (FunctionNode functionNode : node.functions) {
@@ -77,10 +80,13 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
 
     @Override
     public Void visit(FunctionNode node) throws CompilerError {
+        scopeHandler.enterScope(node.scope);
+
         for (StatementNode statement : node.statements) {
             statement.accept(generator);
         }
 
+        scopeHandler.leaveScope(node.scope);
         symbol = node.symbol;
         return null;
     }
@@ -105,6 +111,34 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
             }
             emit(new Return());
             return null;
+        }
+
+        @Override
+        public Void visit(CallNode node) throws CompilerError {
+            if (node.function instanceof IdentifierNode identifier) {
+                Symbol symbol = scopeHandler.getSymbolTable().lookup(identifier.name);
+                if (symbol instanceof FunctionSymbol functionSymbol) {
+                    emitFunctionCall(functionSymbol, identifier, node.arguments);
+                    return null;
+                }
+            }
+
+            emitIndirectFunctionCall(node.function, node.arguments);
+            return null;
+        }
+
+        private void emitFunctionCall(
+                FunctionSymbol functionSymbol,
+                IdentifierNode function,
+                List<ExpressionNode> arguments) throws CompilerError {
+            for (ExpressionNode argument : arguments) {
+                argument.accept(this);
+            }
+            emit(new Call(functionSymbol));
+        }
+
+        private void emitIndirectFunctionCall(ExpressionNode function, List<ExpressionNode> arguments) throws CompilerError {
+            throw new UnsupportedOperationException();
         }
 
         @Override

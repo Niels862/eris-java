@@ -7,6 +7,7 @@ import eris.compiler.TokenKind;
 import eris.compiler.ast.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Parser {
@@ -76,15 +77,38 @@ public class Parser {
     }
 
     ExpressionNode parseExpression() throws CompilerError {
-        return parseAtom();
+        return parsePostfixExpression();
+    }
+
+    ExpressionNode parsePostfixExpression() throws CompilerError {
+        ExpressionNode expression = parseAtom();
+
+        Token token = getToken();
+        while (true) {
+            if (accept(TokenKind.LPAREN) != null) {
+                // TODO: args list
+                expect(TokenKind.RPAREN);
+                expression = new CallNode(token, expression, Collections.emptyList());
+            } else {
+                return expression;
+            }
+        }
     }
 
     ExpressionNode parseAtom() throws CompilerError {
-        return parseInteger();
+        Token token = getToken();
+        if (accept(TokenKind.IDENTIFIER) != null) {
+            return new IdentifierNode(token, token.text);
+        } else if (accept(TokenKind.INTEGER) != null) {
+            return parseInteger(token);
+        } else {
+            throw unexpectedTokenError(token, "expression");
+        }
     }
 
-    IntegerNode parseInteger() throws CompilerError {
-        Token token = expect(TokenKind.INTEGER);
+    IntegerNode parseInteger(Token token) throws CompilerError {
+        assert token.kind == TokenKind.INTEGER;
+
         try {
             String text = token.text;
             boolean negative = text.startsWith("-");
@@ -145,12 +169,11 @@ public class Parser {
             throw invalidTokenError(token);
         }
 
-        String str = String.format("Expected %s, but got %s", kind.userString, token.kind.userString);
-        if (token.kind.hasData) {
-            throw new ParserError(token, str + ": " + token.text);
-        } else {
-            throw new ParserError(token, str);
-        }
+        throw unexpectedTokenError(token, kind.userString);
+    }
+
+    public boolean matches(TokenKind kind) {
+        return getToken().kind == kind;
     }
 
     Token nextToken() {
@@ -169,13 +192,22 @@ public class Parser {
         return getToken().kind == TokenKind.EOF;
     }
 
-    public class ParserError extends CompilerError {
-        public ParserError(Token token, String message) {
-            super(String.format("%s:%d:%d: %s", module.path, token.line, token.column, message));
+    private ParserError invalidTokenError(Token token) {
+        return new ParserError(token, String.format("Invalid %s: %s", token.kind.userString, token.text));
+    }
+
+    private ParserError unexpectedTokenError(Token token, String expected) {
+        String str = String.format("Expected %s, but got %s", expected, token.kind.userString);
+        if (token.kind.hasData) {
+            return new ParserError(token, str + ": " + token.text);
+        } else {
+            return new ParserError(token, str);
         }
     }
 
-    private ParserError invalidTokenError(Token token) {
-        return new ParserError(token, String.format("Invalid %s: %s", token.kind.userString, token.text));
+    public class ParserError extends CompilerError {
+        public ParserError(Token token, String message) {
+            super(module, token.line, token.column, message);
+        }
     }
 }

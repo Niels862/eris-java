@@ -27,6 +27,7 @@ public class Compiler {
             compiledModules.addAll(manager.getCompiledDependencyModules(module));
         } catch (CompilerError e) {
             System.err.println(e.getMessage());
+            return null;
         }
 
         return compiledModules;

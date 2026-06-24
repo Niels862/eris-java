@@ -16,17 +16,20 @@ public class NodeWriter extends NodeVisitor<Void> {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public Void visit(ModuleNode node) throws CompilerError {
         write("functions", node.functions);
         return null;
     }
 
+    @Override
     public Void visit(FunctionNode node) throws CompilerError {
         write("name", node.name);
         write("statements", node.statements);
         return null;
     }
 
+    @Override
     public Void visit(ReturnStatementNode node) throws CompilerError {
         if (node.value != null) {
             write("value", node.value);
@@ -34,6 +37,20 @@ public class NodeWriter extends NodeVisitor<Void> {
         return null;
     }
 
+    @Override
+    public Void visit(CallNode node) throws CompilerError {
+        write("function", node.function);
+        write("arguments", node.arguments);
+        return null;
+    }
+
+    @Override
+    public Void visit(IdentifierNode node) throws CompilerError {
+        write("name", node.name);
+        return null;
+    }
+
+    @Override
     public Void visit(IntegerNode node) {
         write("value", Integer.toString(node.value));
         return null;

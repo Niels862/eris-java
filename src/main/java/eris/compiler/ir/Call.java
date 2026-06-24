@@ -2,8 +2,6 @@ package eris.compiler.ir;
 
 import eris.compiler.CompilerError;
 import eris.compiler.symbol.FunctionSymbol;
-import eris.module.constant.Constant;
-import eris.module.constant.FunctionReferenceConstant;
 
 public class Call extends IntermediateInstruction {
     public final FunctionSymbol function;

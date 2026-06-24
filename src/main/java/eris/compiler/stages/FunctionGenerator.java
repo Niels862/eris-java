@@ -30,7 +30,8 @@ public class FunctionGenerator {
             emitter.emit(instruction);
         }
 
-        return new Function(function.symbol.name, makeCodeArray());
+        // FIXME: numArgs hardcoded to one
+        return new Function(function.symbol.name, makeCodeArray(), 0);
     }
 
     private Instruction[] makeCodeArray() {
@@ -71,6 +72,12 @@ public class FunctionGenerator {
         @Override
         public Void visit(Return instruction) throws CompilerError {
             emit(OpCode.RETURN);
+            return null;
+        }
+
+        @Override
+        public Void visit(Halt instruction) throws CompilerError {
+            emit(OpCode.HALT);
             return null;
         }
 
