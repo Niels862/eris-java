@@ -20,7 +20,7 @@ public abstract class NodeVisitor<T> {
         return defaultHandler(node);
     }
 
-    public T visit(DeclarationNode node) throws CompilerError {
+    public T visit(VariableNode node) throws CompilerError {
         return defaultHandler(node);
     }
 
@@ -37,6 +37,10 @@ public abstract class NodeVisitor<T> {
     }
 
     public T visit(IntegerNode node) throws CompilerError {
+        return defaultHandler(node);
+    }
+
+    public T visit(NamedTypeNode node) throws CompilerError {
         return defaultHandler(node);
     }
 }

@@ -1,9 +1,15 @@
 func f() -> int {
-    return g(53);
+    return g(h());
 }
 
 func g(x: int) -> int {
     return x;
+}
+
+func h() -> int {
+    var i = 53;
+    var j = i;
+    return j;
 }
 
 func main() -> int {

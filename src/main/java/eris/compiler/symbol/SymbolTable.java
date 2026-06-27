@@ -11,6 +11,13 @@ public class SymbolTable {
         this.parent = parent;
     }
 
+    public SymbolTable(Symbol[] entries) {
+        this.parent = null;
+        for (Symbol entry : entries) {
+            symbols.put(entry.name, entry);
+        }
+    }
+
     public Symbol lookup(String name) {
         Symbol symbol = symbols.get(name);
         if (symbol == null && parent != null) {

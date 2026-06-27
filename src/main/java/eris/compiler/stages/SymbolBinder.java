@@ -2,16 +2,24 @@ package eris.compiler.stages;
 
 import eris.compiler.BuildModule;
 import eris.compiler.CompilerError;
+import eris.compiler.TypeContext;
 import eris.compiler.ast.*;
-import eris.compiler.symbol.FunctionSymbol;
-import eris.compiler.symbol.ScopeHandler;
-import eris.compiler.symbol.VariableSymbol;
+import eris.compiler.symbol.*;
+import eris.compiler.type.ClassType;
+import eris.compiler.type.FunctionType;
+import eris.compiler.type.Type;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class SymbolBinder extends NodeVisitor<Void> {
     private final BuildModule module;
     private final ModuleNode moduleNode;
 
     private final ScopeHandler scopeHandler = new ScopeHandler();
+    private final TypeContext context = TypeContext.instance;
+    private final TypeBuilder typeBuilder = new TypeBuilder();
 
     public SymbolBinder(BuildModule module, ModuleNode moduleNode) {
         this.module = module;
@@ -19,8 +27,9 @@ public class SymbolBinder extends NodeVisitor<Void> {
     }
 
     public void bindSymbols() throws CompilerError {
+        scopeHandler.enterScope(context.symbolTable);
         moduleNode.accept(this);
-        System.out.println(moduleNode.globalScope);
+        scopeHandler.leaveScope(context.symbolTable);
     }
 
     @Override
@@ -31,36 +40,43 @@ public class SymbolBinder extends NodeVisitor<Void> {
         }
         scopeHandler.leaveScope(node.globalScope);
 
-        node.entrySymbol = new FunctionSymbol("$entry", module, node.line, node.column);
+        FunctionType entryFunctionType = new FunctionType(Collections.emptyList(), context.INT);
+        node.entrySymbol = new FunctionSymbol("$entry", module, node.line, node.column, entryFunctionType);
         return null;
     }
 
     @Override
     public Void visit(FunctionNode node) throws CompilerError {
         node.scope = scopeHandler.enterNewScope();
+
+        List<Type> parameterTypes = new ArrayList<Type>();
         for (ParameterNode parameter : node.parameters) {
             parameter.accept(this);
+            parameterTypes.add(parameter.symbol.type);
         }
+
         for (StatementNode statement : node.statements) {
             statement.accept(this);
         }
         scopeHandler.leaveScope(node.scope);
 
-        node.symbol = new FunctionSymbol(node.name, module, node.line, node.column);
+        FunctionType type = new FunctionType(parameterTypes, context.INT);
+        node.symbol = new FunctionSymbol(node.name, module, node.line, node.column, type);
         scopeHandler.insert(node.name, node.symbol);
         return null;
     }
 
     @Override
     public Void visit(ParameterNode node) throws CompilerError {
-        node.symbol = new VariableSymbol(node.name, module, node.line, node.column);
+        Type type = buildType(node.type);
+        node.symbol = new VariableSymbol(node.name, module, node.line, node.column, type);
         scopeHandler.insert(node.name, node.symbol);
         return null;
     }
 
     @Override
-    public Void visit(DeclarationNode node) throws CompilerError {
-        node.symbol = new VariableSymbol(node.name, module, node.line, node.column);
+    public Void visit(VariableNode node) throws CompilerError {
+        node.symbol = new VariableSymbol(node.name, module, node.line, node.column, null);
         scopeHandler.insert(node.name, node.symbol);
         return null;
     }
@@ -73,5 +89,23 @@ public class SymbolBinder extends NodeVisitor<Void> {
     @Override
     public Void visit(IntegerNode node) {
         return null;
+    }
+
+    private Type buildType(TypeNode node) throws CompilerError {
+        Type type = node.accept(typeBuilder);
+        assert type != null;
+        return type;
+    }
+
+    private class TypeBuilder extends NodeVisitor<Type> {
+        @Override
+        public Type visit(NamedTypeNode node) throws CompilerError {
+            Symbol symbol = scopeHandler.getSymbolTable().lookup(node.name);
+            if (symbol instanceof ClassSymbol classSymbol) {
+                return classSymbol.valueType;
+            } else {
+                throw new CompilerError(module, node.line, node.column, String.format("%s is not a typename", node.name));
+            }
+        }
     }
 }

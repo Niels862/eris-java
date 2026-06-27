@@ -2,18 +2,13 @@ package eris.compiler.ast;
 
 import eris.compiler.CompilerError;
 import eris.compiler.Token;
-import eris.compiler.symbol.VariableSymbol;
 
-public class DeclarationNode extends StatementNode {
+public class NamedTypeNode extends TypeNode {
     public final String name;
-    public final ExpressionNode initialValue;
 
-    public VariableSymbol symbol;
-
-    public DeclarationNode(Token token, String name, ExpressionNode initialValue) {
+    public NamedTypeNode(Token token, String name) {
         super(token);
         this.name = name;
-        this.initialValue = initialValue;
     }
 
     @Override

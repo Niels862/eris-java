@@ -1,13 +1,17 @@
 package eris.compiler.symbol;
 
 import eris.compiler.BuildModule;
+import eris.compiler.type.Type;
 
 public class VariableSymbol extends Symbol {
+    public final Type type;
+
     private int slotIndex = -1;
     private boolean isDeclared = false;
 
-    public VariableSymbol(String name, BuildModule module, int line, int column) {
+    public VariableSymbol(String name, BuildModule module, int line, int column, Type type) {
         super(name, module, line, column);
+        this.type = type;
     }
 
     public int getSlotIndex() {

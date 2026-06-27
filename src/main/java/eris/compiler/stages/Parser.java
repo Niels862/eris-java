@@ -36,11 +36,14 @@ public class Parser {
         expect(TokenKind.FUNC);
         Token name = expect(TokenKind.IDENTIFIER);
         List<ParameterNode> parameters = parseParameters();
+
+        TypeNode returnType = null;
         if (accept(TokenKind.ARROW) != null) {
-            expect(TokenKind.IDENTIFIER);
+            returnType = parseTypeAnnotation();
         }
+
         List<StatementNode> statements = parseStatementBlock();
-        return new FunctionNode(name, statements, parameters);
+        return new FunctionNode(name, statements, parameters, returnType);
     }
 
     private List<ParameterNode> parseParameters() throws CompilerError {
@@ -54,9 +57,9 @@ public class Parser {
         while (!atEnd()) {
             Token name = expect(TokenKind.IDENTIFIER);
             expect(TokenKind.COLON);
-            expect(TokenKind.IDENTIFIER);
+            TypeNode type = parseTypeAnnotation();
 
-            parameters.add(new ParameterNode(name, name.text));
+            parameters.add(new ParameterNode(name, name.text, type));
 
             if (accept(TokenKind.COMMA) == null) {
                 expect(TokenKind.RPAREN);
@@ -72,14 +75,19 @@ public class Parser {
             return parseReturnStatement();
         }
         if (matches(TokenKind.VAR)) {
-            return parseDeclaration();
+            return parseVariable();
         }
         throw unexpectedTokenError(getToken(), "statement");
     }
 
-    private DeclarationNode parseDeclaration() throws CompilerError {
+    private VariableNode parseVariable() throws CompilerError {
         Token token = expect(TokenKind.VAR);
         Token name = expect(TokenKind.IDENTIFIER);
+
+        TypeNode type = null;
+        if (accept(TokenKind.COLON) != null) {
+            type = parseTypeAnnotation();
+        }
 
         ExpressionNode initialValue = null;
         if (accept(TokenKind.EQ) != null) {
@@ -87,7 +95,7 @@ public class Parser {
         }
 
         expect(TokenKind.SEMICOLON);
-        return new DeclarationNode(name, name.text, initialValue);
+        return new VariableNode(name, name.text, initialValue, type);
     }
 
     private ReturnStatementNode parseReturnStatement() throws CompilerError {
@@ -212,6 +220,11 @@ public class Parser {
         }
 
         throw unexpectedTokenError(getToken(), "expression");
+    }
+
+    private TypeNode parseTypeAnnotation() throws CompilerError {
+        Token name = expect(TokenKind.IDENTIFIER);
+        return new NamedTypeNode(name, name.text);
     }
 
     private Token accept(TokenKind kind) {

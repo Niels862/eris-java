@@ -32,7 +32,7 @@ public class ConstantManager {
     public FunctionReferenceConstant getFunctionReferenceConstant(FunctionSymbol function) {
         FunctionReferenceConstant constant = functionReferenceConstants.get(function);
         if (constant == null) {
-            ModuleReferenceConstant moduleReference = getModuleReferenceConstant(function.module);
+            ModuleReferenceConstant moduleReference = getModuleReferenceConstant(function.getModule());
             StringConstant nameConstant = getStringConstant(function.name);
             constant = new FunctionReferenceConstant(moduleReference, nameConstant);
             insert(constant, function, functionReferenceConstants);

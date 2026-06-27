@@ -27,6 +27,7 @@ public class NodeWriter extends NodeVisitor<Void> {
         write("name", node.name);
         write("statements", node.statements);
         write("parameters", node.parameters);
+        write("returnType", node.returnType);
         return null;
     }
 
@@ -37,17 +38,16 @@ public class NodeWriter extends NodeVisitor<Void> {
     }
 
     @Override
-    public Void visit(DeclarationNode node) throws CompilerError {
+    public Void visit(VariableNode node) throws CompilerError {
         write("name", node.name);
         write("initialValue", node.initialValue);
+        write("type", node.type);
         return null;
     }
 
     @Override
     public Void visit(ReturnStatementNode node) throws CompilerError {
-        if (node.value != null) {
-            write("value", node.value);
-        }
+        write("value", node.value);
         return null;
     }
 
@@ -67,6 +67,12 @@ public class NodeWriter extends NodeVisitor<Void> {
     @Override
     public Void visit(IntegerNode node) {
         write("value", Integer.toString(node.value));
+        return null;
+    }
+
+    @Override
+    public Void visit(NamedTypeNode node) throws CompilerError {
+        write("name", node.name);
         return null;
     }
 
@@ -101,12 +107,16 @@ public class NodeWriter extends NodeVisitor<Void> {
     }
 
     private void writeWithPrefix(String prefix, Node node) throws CompilerError {
-        write(prefix + "{");
-        level++;
-        writeDefault(node);
-        node.accept(this);
-        level--;
-        write("}");
+        if (node == null) {
+            write(prefix + "null");
+        } else {
+            write(prefix + "{");
+            level++;
+            writeDefault(node);
+            node.accept(this);
+            level--;
+            write("}");
+        }
     }
 
     private void writeLevel() {

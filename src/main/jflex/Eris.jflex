@@ -20,10 +20,10 @@ package eris.compiler;
 
 WhiteSpace = [ \t\r|\n|\r\n]
 
+Identifier = [A-Za-z_][A-Za-z0-9_]*
+
 IntegerLiteral = -? (0 | [0-9_]* | 0x[0-9A-Fa-z_]* | 0b[01_]* | 0u[1_]*1)
 InvalidIntegerLiteral = -? [0-9][A-Za-z0-9_]*
-
-Identifier = [A-Za-z_][A-Za-z0-9_]*
 
 %%
 
@@ -45,9 +45,9 @@ Identifier = [A-Za-z_][A-Za-z0-9_]*
   ":"                       { return token(TokenKind.COLON); }
   "="                       { return token(TokenKind.EQ); }
 
+  {Identifier}              { return token(TokenKind.IDENTIFIER); }
   {IntegerLiteral}          { return token(TokenKind.INTEGER); }
   {InvalidIntegerLiteral}   { return token(TokenKind.INVALID_INTEGER); }
-  {Identifier}              { return token(TokenKind.IDENTIFIER); }
 
   {WhiteSpace}              {}
 }

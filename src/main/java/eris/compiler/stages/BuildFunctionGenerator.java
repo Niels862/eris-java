@@ -6,7 +6,6 @@ import eris.compiler.CompilerError;
 import eris.compiler.ast.*;
 import eris.compiler.ir.*;
 import eris.compiler.symbol.*;
-import eris.module.OpCode;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -125,7 +124,7 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         }
 
         @Override
-        public Void visit(DeclarationNode node) throws CompilerError {
+        public Void visit(VariableNode node) throws CompilerError {
             if (node.initialValue != null) {
                 node.initialValue.accept(expressionGenerator);
                 emit(new StoreLocal(node.symbol));
