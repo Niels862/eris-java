@@ -1,4 +1,4 @@
-func main() -> bool {
-    var x: bool = 5;
+func main() -> int {
+    var x = true;
     return x;
 }

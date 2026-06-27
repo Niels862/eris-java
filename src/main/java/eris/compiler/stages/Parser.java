@@ -156,7 +156,7 @@ public class Parser {
         throw unexpectedTokenError(token, "expression");
     }
 
-    private IntegerNode parseInteger(Token token) throws CompilerError {
+    private IntegerLiteralNode parseInteger(Token token) throws CompilerError {
         assert token.kind == TokenKind.INTEGER;
 
         try {
@@ -195,7 +195,7 @@ public class Parser {
                 value = Integer.parseInt(text, base);
             }
 
-            return new IntegerNode(token, value);
+            return new IntegerLiteralNode(token, value);
         } catch (NumberFormatException e) {
             throw invalidTokenError(token);
         }

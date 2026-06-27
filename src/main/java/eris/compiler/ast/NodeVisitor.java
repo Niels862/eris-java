@@ -36,7 +36,15 @@ public abstract class NodeVisitor<T> {
         return defaultHandler(node);
     }
 
-    public T visit(IntegerNode node) throws CompilerError {
+    public T visit(IntegerLiteralNode node) throws CompilerError {
+        return defaultHandler(node);
+    }
+
+    public T visit(BooleanLiteralNode node) throws CompilerError {
+        return defaultHandler(node);
+    }
+
+    public T visit(StringLiteralNode node) throws CompilerError {
         return defaultHandler(node);
     }
 

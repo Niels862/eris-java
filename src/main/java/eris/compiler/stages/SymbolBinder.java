@@ -5,7 +5,6 @@ import eris.compiler.CompilerError;
 import eris.compiler.TypeContext;
 import eris.compiler.ast.*;
 import eris.compiler.symbol.*;
-import eris.compiler.type.ClassType;
 import eris.compiler.type.FunctionType;
 import eris.compiler.type.Type;
 
@@ -96,7 +95,7 @@ public class SymbolBinder extends NodeVisitor<Void> {
     }
 
     @Override
-    public Void visit(IntegerNode node) {
+    public Void visit(IntegerLiteralNode node) {
         return null;
     }
 

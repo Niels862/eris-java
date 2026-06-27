@@ -208,7 +208,7 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         }
 
         @Override
-        public Void visit(IntegerNode node) {
+        public Void visit(IntegerLiteralNode node) {
             emit(new LoadConstant(node.value));
             return null;
         }

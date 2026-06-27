@@ -1,6 +1,7 @@
 package eris.compiler.ast;
 
 import eris.compiler.CompilerError;
+import org.apache.commons.text.StringEscapeUtils;
 
 import java.util.List;
 
@@ -65,8 +66,20 @@ public class NodeWriter extends NodeVisitor<Void> {
     }
 
     @Override
-    public Void visit(IntegerNode node) {
+    public Void visit(IntegerLiteralNode node) {
         write("value", Integer.toString(node.value));
+        return null;
+    }
+
+    @Override
+    public Void visit(BooleanLiteralNode node) {
+        write("value", Boolean.toString(node.value));
+        return null;
+    }
+
+    @Override
+    public Void visit(StringLiteralNode node) {
+        write("value", StringEscapeUtils.escapeJava(node.value));
         return null;
     }
 

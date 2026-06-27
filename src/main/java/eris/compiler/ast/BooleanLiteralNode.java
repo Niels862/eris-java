@@ -3,10 +3,10 @@ package eris.compiler.ast;
 import eris.compiler.CompilerError;
 import eris.compiler.Token;
 
-public class IntegerNode extends ExpressionNode {
-    public final int value;
+public class BooleanLiteralNode extends ExpressionNode {
+    public final boolean value;
 
-    public IntegerNode(Token token, int value) {
+    public BooleanLiteralNode(Token token, boolean value) {
         super(token);
         this.value = value;
     }
