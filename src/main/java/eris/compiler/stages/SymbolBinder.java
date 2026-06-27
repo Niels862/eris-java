@@ -23,6 +23,7 @@ public class SymbolBinder extends NodeVisitor<Void> {
         System.out.println(moduleNode.globalScope);
     }
 
+    @Override
     public Void visit(ModuleNode node) throws CompilerError {
         node.globalScope = scopeHandler.enterNewScope();
         for (FunctionNode function : node.functions) {
@@ -34,8 +35,12 @@ public class SymbolBinder extends NodeVisitor<Void> {
         return null;
     }
 
+    @Override
     public Void visit(FunctionNode node) throws CompilerError {
         node.scope = scopeHandler.enterNewScope();
+        for (ParameterNode parameter : node.parameters) {
+            parameter.accept(this);
+        }
         for (StatementNode statement : node.statements) {
             statement.accept(this);
         }
@@ -46,16 +51,26 @@ public class SymbolBinder extends NodeVisitor<Void> {
         return null;
     }
 
+    @Override
+    public Void visit(ParameterNode node) throws CompilerError {
+        node.symbol = new VariableSymbol(node.name, module, node.line, node.column);
+        scopeHandler.insert(node.name, node.symbol);
+        return null;
+    }
+
+    @Override
     public Void visit(DeclarationNode node) throws CompilerError {
         node.symbol = new VariableSymbol(node.name, module, node.line, node.column);
         scopeHandler.insert(node.name, node.symbol);
         return null;
     }
 
+    @Override
     public Void visit(ReturnStatementNode node) {
         return null;
     }
 
+    @Override
     public Void visit(IntegerNode node) {
         return null;
     }

@@ -10,14 +10,16 @@ import java.util.List;
 public class FunctionNode extends Node {
     public final String name;
     public final List<StatementNode> statements;
+    public final List<ParameterNode> parameters;
 
     public SymbolTable scope;
     public FunctionSymbol symbol;
 
-    public FunctionNode(Token name, List<StatementNode> statements) {
+    public FunctionNode(Token name, List<StatementNode> statements, List<ParameterNode> parameters) {
         super(name);
         this.name = name.text;
         this.statements = statements;
+        this.parameters = parameters;
     }
 
     public <T> T accept(NodeVisitor<T> visitor) throws CompilerError {

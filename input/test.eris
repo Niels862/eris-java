@@ -3,6 +3,10 @@ func f() -> int {
     return 42;
 }
 
+func g(x: int) -> int {
+    return x;
+}
+
 func main() -> int {
     var x = 5;
     return x;

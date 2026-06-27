@@ -32,19 +32,42 @@ public class Parser {
         return new ModuleNode(token, functions);
     }
 
-    FunctionNode parseFunction() throws CompilerError {
+    private FunctionNode parseFunction() throws CompilerError {
         expect(TokenKind.FUNC);
         Token name = expect(TokenKind.IDENTIFIER);
-        expect(TokenKind.LPAREN);
-        expect(TokenKind.RPAREN);
+        List<ParameterNode> parameters = parseParameters();
         if (accept(TokenKind.ARROW) != null) {
             expect(TokenKind.IDENTIFIER);
         }
         List<StatementNode> statements = parseStatementBlock();
-        return new FunctionNode(name, statements);
+        return new FunctionNode(name, statements, parameters);
     }
 
-    StatementNode parseStatement() throws CompilerError {
+    private List<ParameterNode> parseParameters() throws CompilerError {
+        expect(TokenKind.LPAREN);
+        if (accept(TokenKind.RPAREN) != null) {
+            return Collections.emptyList();
+        }
+
+        List<ParameterNode> parameters = new ArrayList<>();
+
+        while (!atEnd()) {
+            Token name = expect(TokenKind.IDENTIFIER);
+            expect(TokenKind.COLON);
+            expect(TokenKind.IDENTIFIER);
+
+            parameters.add(new ParameterNode(name, name.text));
+
+            if (accept(TokenKind.COMMA) == null) {
+                expect(TokenKind.RPAREN);
+                return parameters;
+            }
+        }
+
+        throw unexpectedTokenError(getToken(), "parameter declaration");
+    }
+
+    private StatementNode parseStatement() throws CompilerError {
         if (matches(TokenKind.RETURN)) {
             return parseReturnStatement();
         }
@@ -54,7 +77,7 @@ public class Parser {
         throw unexpectedTokenError(getToken(), "statement");
     }
 
-    DeclarationNode parseDeclaration() throws CompilerError {
+    private DeclarationNode parseDeclaration() throws CompilerError {
         Token token = expect(TokenKind.VAR);
         Token name = expect(TokenKind.IDENTIFIER);
 
@@ -67,7 +90,7 @@ public class Parser {
         return new DeclarationNode(name, name.text, initialValue);
     }
 
-    ReturnStatementNode parseReturnStatement() throws CompilerError {
+    private ReturnStatementNode parseReturnStatement() throws CompilerError {
         Token token = expect(TokenKind.RETURN);
 
         if (accept(TokenKind.SEMICOLON) != null) {
@@ -79,7 +102,7 @@ public class Parser {
         }
     }
 
-    List<StatementNode> parseStatementBlock() throws CompilerError {
+    private List<StatementNode> parseStatementBlock() throws CompilerError {
         expect(TokenKind.LBRACE);
 
         List<StatementNode> statements = new ArrayList<>();
@@ -95,11 +118,11 @@ public class Parser {
         return statements;
     }
 
-    ExpressionNode parseExpression() throws CompilerError {
+    private ExpressionNode parseExpression() throws CompilerError {
         return parsePostfixExpression();
     }
 
-    ExpressionNode parsePostfixExpression() throws CompilerError {
+    private ExpressionNode parsePostfixExpression() throws CompilerError {
         ExpressionNode expression = parseAtom();
 
         Token token = getToken();
@@ -114,7 +137,7 @@ public class Parser {
         }
     }
 
-    ExpressionNode parseAtom() throws CompilerError {
+    private ExpressionNode parseAtom() throws CompilerError {
         Token token = getToken();
         if (accept(TokenKind.IDENTIFIER) != null) {
             return new IdentifierNode(token, token.text);
@@ -126,7 +149,7 @@ public class Parser {
         throw unexpectedTokenError(token, "expression");
     }
 
-    IntegerNode parseInteger(Token token) throws CompilerError {
+    private IntegerNode parseInteger(Token token) throws CompilerError {
         assert token.kind == TokenKind.INTEGER;
 
         try {
@@ -171,7 +194,7 @@ public class Parser {
         }
     }
 
-    Token accept(TokenKind kind) {
+    private Token accept(TokenKind kind) {
         Token token = getToken();
         if (token.kind == kind) {
             return nextToken();
@@ -179,7 +202,7 @@ public class Parser {
         return null;
     }
 
-    Token expect(TokenKind kind) throws CompilerError {
+    private Token expect(TokenKind kind) throws CompilerError {
         Token token = getToken();
         if (token.kind == kind) {
             return nextToken();
@@ -188,11 +211,11 @@ public class Parser {
         throw unexpectedTokenError(token, kind.userString);
     }
 
-    public boolean matches(TokenKind kind) {
+    private boolean matches(TokenKind kind) {
         return getToken().kind == kind;
     }
 
-    Token nextToken() {
+    private Token nextToken() {
         Token token = getToken();
         if (index < tokens.size() - 1) {
             index++;
@@ -200,7 +223,7 @@ public class Parser {
         return token;
     }
 
-    Token getToken() {
+    private Token getToken() {
         return tokens.get(index);
     }
 

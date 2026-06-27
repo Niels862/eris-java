@@ -44,21 +44,35 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
     }
 
     private BuildFunction buildTask(Task task) throws CompilerError {
+        buildTaskPrologue(task);
+        task.node.accept(this);
+        buildTaskEpilogue(task);
+        return new BuildFunction(task.node, symbol, block, parameters, locals);
+    }
+
+    private void buildTaskPrologue(Task task) throws CompilerError {
         block = new IntermediateBlock(0);
         locals = new ArrayList<>();
         parameters = new ArrayList<>();
 
+        if (task.node instanceof FunctionNode functionNode) {
+            for (ParameterNode parameter : functionNode.parameters) {
+                parameter.symbol.setDeclared();
+                parameters.add(parameter.symbol);
+            }
+        }
+
         if (task.enclosing != null) {
             scopeHandler.enterScope(task.enclosing);
         }
+    }
 
-        task.node.accept(this);
+    private void buildTaskEpilogue(Task task) throws CompilerError {
         assert symbol != null;
 
         if (task.enclosing != null) {
             scopeHandler.leaveScope(task.enclosing);
         }
-        return new BuildFunction(task.node, symbol, block, parameters, locals);
     }
 
     @Override
@@ -172,6 +186,8 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
                             String.format("Variable %s is referenced before declaration", node.name));
                 }
                 emit(new LoadLocal(variableSymbol));
+            } else if (symbol == null) {
+                throw new CompilerError(module, node.line, node.column, node.name + " is not declared in this scope");
             } else {
                 throw new UnsupportedOperationException();
             }

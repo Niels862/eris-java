@@ -26,6 +26,7 @@ public class NodeWriter extends NodeVisitor<Void> {
     public Void visit(FunctionNode node) throws CompilerError {
         write("name", node.name);
         write("statements", node.statements);
+        write("parameters", node.parameters);
         return null;
     }
 

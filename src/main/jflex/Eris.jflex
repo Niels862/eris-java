@@ -42,6 +42,7 @@ Identifier = [A-Za-z_][A-Za-z0-9_]*
   "}"                       { return token(TokenKind.RBRACE); }
   ","                       { return token(TokenKind.COMMA); }
   ";"                       { return token(TokenKind.SEMICOLON); }
+  ":"                       { return token(TokenKind.COLON); }
   "="                       { return token(TokenKind.EQ); }
 
   {IntegerLiteral}          { return token(TokenKind.INTEGER); }

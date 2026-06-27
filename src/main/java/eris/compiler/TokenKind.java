@@ -10,6 +10,7 @@ public enum TokenKind {
     RBRACE("}"),
     COMMA(","),
     SEMICOLON(";"),
+    COLON(":"),
     EQ("="),
 
     FUNC("func"),
