@@ -76,7 +76,15 @@ public class SymbolBinder extends NodeVisitor<Void> {
 
     @Override
     public Void visit(VariableNode node) throws CompilerError {
-        node.symbol = new VariableSymbol(node.name, module, node.line, node.column, null);
+        Type type = null;
+        if (node.type != null) {
+            type = buildType(node.type);
+        } else if (node.initialValue == null) {
+            throw new CompilerError(
+                    module, node.line, node.column,
+                    String.format("Cannot infer type of %s: missing initial value", node.name));
+        }
+        node.symbol = new VariableSymbol(node.name, module, node.line, node.column, type);
         scopeHandler.insert(node.name, node.symbol);
         return null;
     }
