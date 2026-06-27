@@ -10,6 +10,11 @@ public class Instruction {
     }
 
     public String toString() {
-        return opcode.toString() + " " + argument;
+        return switch (opcode.format) {
+            case NO_ARGUMENT
+                    -> opcode.toString();
+            case INTEGER
+                    -> opcode.toString() + " " + argument;
+        };
     }
 }

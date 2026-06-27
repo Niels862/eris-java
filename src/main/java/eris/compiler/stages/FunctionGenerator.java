@@ -3,6 +3,7 @@ package eris.compiler.stages;
 import eris.compiler.BuildFunction;
 import eris.compiler.CompilerError;
 import eris.compiler.ir.*;
+import eris.compiler.symbol.VariableSymbol;
 import eris.module.Function;
 import eris.module.Instruction;
 import eris.module.OpCode;
@@ -24,14 +25,20 @@ public class FunctionGenerator {
     }
 
     public Function compile() {
-        InstructionEmitter emitter = new InstructionEmitter();
+        int slotIndex = 0;
+        for (VariableSymbol parameter : function.parameters) {
+            parameter.setSlotIndex(slotIndex++);
+        }
+        for (VariableSymbol local : function.locals) {
+            local.setSlotIndex(slotIndex++);
+        }
 
+        InstructionEmitter emitter = new InstructionEmitter();
         for (IntermediateInstruction instruction : function.block.instructions) {
             emitter.emit(instruction);
         }
 
-        // FIXME: numArgs hardcoded to one
-        return new Function(function.symbol.name, makeCodeArray(), 0);
+        return new Function(function.symbol.name, makeCodeArray(), function.parameters.size(), function.locals.size());
     }
 
     private Instruction[] makeCodeArray() {
@@ -59,6 +66,18 @@ public class FunctionGenerator {
             }
 
             emit(OpCode.LOAD_CONST, constants.getIndexOf(constant));
+            return null;
+        }
+
+        @Override
+        public Void visit(LoadLocal instruction) throws CompilerError {
+            emit(OpCode.LOAD_LOCAL, instruction.symbol.getSlotIndex());
+            return null;
+        }
+
+        @Override
+        public Void visit(StoreLocal instruction) throws CompilerError {
+            emit(OpCode.STORE_LOCAL, instruction.symbol.getSlotIndex());
             return null;
         }
 

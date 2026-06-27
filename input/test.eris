@@ -1,7 +1,9 @@
 func f() -> int {
+    var x = 5;
     return 42;
 }
 
 func main() -> int {
-    return f();
+    var x = 5;
+    return x;
 }

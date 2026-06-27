@@ -29,12 +29,12 @@ public class ScopeHandler {
         assert symbolTable != null;
 
         if (symbolTable.defines(name)) {
-            throw new CompilerError("Already defined in this scope: " + name);
+            throw symbolError(symbol, "Already defined in this scope: " + name);
         }
 
         Symbol prevSymbol = symbolTable.lookup(name);
         if (prevSymbol instanceof TypeSymbol) {
-            throw new CompilerError("Cannot shadow typename: " + name);
+            throw symbolError(symbol, "Cannot shadow typename: " + name);
         }
 
         symbolTable.insert(name, symbol);
@@ -46,5 +46,9 @@ public class ScopeHandler {
         } else {
             return enteredScopes.peek();
         }
+    }
+
+    private CompilerError symbolError(Symbol symbol, String message) {
+        return new CompilerError(symbol.module, symbol.line, symbol.column, message);
     }
 }

@@ -30,6 +30,19 @@ public class NodeWriter extends NodeVisitor<Void> {
     }
 
     @Override
+    public Void visit(ParameterNode node) throws CompilerError {
+        write("name", node.name);
+        return null;
+    }
+
+    @Override
+    public Void visit(DeclarationNode node) throws CompilerError {
+        write("name", node.name);
+        write("initialValue", node.initialValue);
+        return null;
+    }
+
+    @Override
     public Void visit(ReturnStatementNode node) throws CompilerError {
         if (node.value != null) {
             write("value", node.value);

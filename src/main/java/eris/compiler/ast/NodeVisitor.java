@@ -16,6 +16,14 @@ public abstract class NodeVisitor<T> {
         return defaultHandler(node);
     }
 
+    public T visit(ParameterNode node) throws CompilerError {
+        return defaultHandler(node);
+    }
+
+    public T visit(DeclarationNode node) throws CompilerError {
+        return defaultHandler(node);
+    }
+
     public T visit(ReturnStatementNode node) throws CompilerError {
         return defaultHandler(node);
     }

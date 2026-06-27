@@ -5,6 +5,7 @@ import eris.compiler.CompilerError;
 import eris.compiler.ast.*;
 import eris.compiler.symbol.FunctionSymbol;
 import eris.compiler.symbol.ScopeHandler;
+import eris.compiler.symbol.VariableSymbol;
 
 public class SymbolBinder extends NodeVisitor<Void> {
     private final BuildModule module;
@@ -41,6 +42,12 @@ public class SymbolBinder extends NodeVisitor<Void> {
         scopeHandler.leaveScope(node.scope);
 
         node.symbol = new FunctionSymbol(node.name, module, node.line, node.column);
+        scopeHandler.insert(node.name, node.symbol);
+        return null;
+    }
+
+    public Void visit(DeclarationNode node) throws CompilerError {
+        node.symbol = new VariableSymbol(node.name, module, node.line, node.column);
         scopeHandler.insert(node.name, node.symbol);
         return null;
     }

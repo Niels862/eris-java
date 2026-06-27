@@ -45,7 +45,26 @@ public class Parser {
     }
 
     StatementNode parseStatement() throws CompilerError {
-        return parseReturnStatement();
+        if (matches(TokenKind.RETURN)) {
+            return parseReturnStatement();
+        }
+        if (matches(TokenKind.VAR)) {
+            return parseDeclaration();
+        }
+        throw unexpectedTokenError(getToken(), "statement");
+    }
+
+    DeclarationNode parseDeclaration() throws CompilerError {
+        Token token = expect(TokenKind.VAR);
+        Token name = expect(TokenKind.IDENTIFIER);
+
+        ExpressionNode initialValue = null;
+        if (accept(TokenKind.EQ) != null) {
+            initialValue = parseExpression();
+        }
+
+        expect(TokenKind.SEMICOLON);
+        return new DeclarationNode(name, name.text, initialValue);
     }
 
     ReturnStatementNode parseReturnStatement() throws CompilerError {
@@ -99,11 +118,12 @@ public class Parser {
         Token token = getToken();
         if (accept(TokenKind.IDENTIFIER) != null) {
             return new IdentifierNode(token, token.text);
-        } else if (accept(TokenKind.INTEGER) != null) {
-            return parseInteger(token);
-        } else {
-            throw unexpectedTokenError(token, "expression");
         }
+        if (accept(TokenKind.INTEGER) != null) {
+            return parseInteger(token);
+        }
+        System.out.printf("%s %s%n", token, TokenKind.INTEGER);
+        throw unexpectedTokenError(token, "expression");
     }
 
     IntegerNode parseInteger(Token token) throws CompilerError {
@@ -165,10 +185,6 @@ public class Parser {
             return nextToken();
         }
 
-        if (token.kind.invalidVariantOf == kind) {
-            throw invalidTokenError(token);
-        }
-
         throw unexpectedTokenError(token, kind.userString);
     }
 
@@ -197,6 +213,10 @@ public class Parser {
     }
 
     private ParserError unexpectedTokenError(Token token, String expected) {
+        if (token.kind.invalidVariantOf != null) {
+            return invalidTokenError(token);
+        }
+
         String str = String.format("Expected %s, but got %s", expected, token.kind.userString);
         if (token.kind.hasData) {
             return new ParserError(token, str + ": " + token.text);

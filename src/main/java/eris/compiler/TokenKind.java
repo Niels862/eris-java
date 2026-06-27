@@ -10,9 +10,11 @@ public enum TokenKind {
     RBRACE("}"),
     COMMA(","),
     SEMICOLON(";"),
+    EQ("="),
 
     FUNC("func"),
     RETURN("return"),
+    VAR("var"),
 
     INTEGER("integer", true),
     INVALID_INTEGER("integer", true, TokenKind.INTEGER),
@@ -21,7 +23,7 @@ public enum TokenKind {
     IDENTIFIER("identifier", true),
     EOF("end of file"),
 
-    UNRECOGNIZED("unrecognized token");
+    UNRECOGNIZED("unrecognized token", true);
 
     public final String userString;
     public final boolean hasData;

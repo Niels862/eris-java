@@ -5,12 +5,8 @@ import eris.compiler.BuildModule;
 import eris.compiler.CompilerError;
 import eris.compiler.ast.*;
 import eris.compiler.ir.*;
-import eris.compiler.symbol.FunctionSymbol;
-import eris.compiler.symbol.ScopeHandler;
-import eris.compiler.symbol.Symbol;
-import eris.compiler.symbol.SymbolTable;
-import eris.module.constant.Constant;
-import eris.module.constant.FunctionReferenceConstant;
+import eris.compiler.symbol.*;
+import eris.module.OpCode;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -21,11 +17,14 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
     private final BuildModule module;
 
     private final Queue<Task> taskQueue = new ArrayDeque<>();
-    private final StatementGenerator generator = new StatementGenerator();
+    private final StatementGenerator statementGenerator = new StatementGenerator();
+    private final ExpressionGenerator expressionGenerator = new ExpressionGenerator();
     private Symbol symbol;
     private final ScopeHandler scopeHandler = new ScopeHandler();
 
     private IntermediateBlock block;
+    private List<VariableSymbol> locals;
+    private List<VariableSymbol> parameters;
 
     public BuildFunctionGenerator(BuildModule module) {
         this.module = module;
@@ -46,15 +45,20 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
 
     private BuildFunction buildTask(Task task) throws CompilerError {
         block = new IntermediateBlock(0);
+        locals = new ArrayList<>();
+        parameters = new ArrayList<>();
+
         if (task.enclosing != null) {
             scopeHandler.enterScope(task.enclosing);
         }
+
         task.node.accept(this);
         assert symbol != null;
+
         if (task.enclosing != null) {
             scopeHandler.leaveScope(task.enclosing);
         }
-        return new BuildFunction(task.node, symbol, block);
+        return new BuildFunction(task.node, symbol, block, parameters, locals);
     }
 
     @Override
@@ -70,7 +74,7 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         }
 
         for (FunctionNode functionNode : node.functions) {
-            functionNode.accept(generator);
+            functionNode.accept(statementGenerator);
         }
 
         scopeHandler.leaveScope(node.globalScope);
@@ -83,12 +87,16 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         scopeHandler.enterScope(node.scope);
 
         for (StatementNode statement : node.statements) {
-            statement.accept(generator);
+            statement.accept(statementGenerator);
         }
 
         scopeHandler.leaveScope(node.scope);
         symbol = node.symbol;
         return null;
+    }
+
+    private void addTask(Node node) {
+        taskQueue.add(new Task(node, scopeHandler.getSymbolTable()));
     }
 
     public void emit(IntermediateInstruction instruction) {
@@ -103,16 +111,29 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         }
 
         @Override
+        public Void visit(DeclarationNode node) throws CompilerError {
+            if (node.initialValue != null) {
+                node.initialValue.accept(expressionGenerator);
+                emit(new StoreLocal(node.symbol));
+            }
+            node.symbol.setDeclared();
+            locals.add(node.symbol);
+            return null;
+        }
+
+        @Override
         public Void visit(ReturnStatementNode node) throws CompilerError {
             if (node.value != null) {
-                node.value.accept(this);
+                node.value.accept(expressionGenerator);
             } else {
                 throw new UnsupportedOperationException();
             }
             emit(new Return());
             return null;
         }
+    }
 
+    private class ExpressionGenerator extends NodeVisitor<Void> {
         @Override
         public Void visit(CallNode node) throws CompilerError {
             if (node.function instanceof IdentifierNode identifier) {
@@ -142,13 +163,25 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         }
 
         @Override
-        public Void visit(IntegerNode node) {
-            emit(new LoadConstant(node.value));
+        public Void visit(IdentifierNode node) throws CompilerError {
+            Symbol symbol = scopeHandler.getSymbolTable().lookup(node.name);
+            if (symbol instanceof VariableSymbol variableSymbol) {
+                if (!variableSymbol.isDeclared()) {
+                    throw new CompilerError(
+                            module, node.line, node.column,
+                            String.format("Variable %s is referenced before declaration", node.name));
+                }
+                emit(new LoadLocal(variableSymbol));
+            } else {
+                throw new UnsupportedOperationException();
+            }
             return null;
         }
 
-        private void addTask(Node node) {
-            taskQueue.add(new Task(node, scopeHandler.getSymbolTable()));
+        @Override
+        public Void visit(IntegerNode node) {
+            emit(new LoadConstant(node.value));
+            return null;
         }
     }
 

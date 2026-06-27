@@ -44,8 +44,6 @@ public class Interpreter {
         enterFunction(module, entry);
 
         while (!halted) {
-            System.out.println(function + " " + instructionPointer);
-
             Instruction instruction = code[instructionPointer];
             System.out.println(">> " + instruction);
             instructionPointer++;
@@ -69,12 +67,12 @@ public class Interpreter {
         this.instructionPointer = 0;
         this.basePointer = stack.size() - function.numArgs;
 
-        System.out.println("Entering function " + function + " at " + instructionPointer);
+        for (int i = 0; i < function.numLocals; i++) {
+            stack.add(null);
+        }
     }
 
     public void exitFunction() {
-        System.out.println("Exiting function " + function);
-
         Object returnValue = stack.getLast();
         while (stack.size() > basePointer) {
             stack.removeLast();
@@ -102,6 +100,18 @@ public class Interpreter {
             case LOAD_CONST: {
                 Constant constant = constants.get(argument);
                 stack.add(constant);
+                break;
+            }
+
+            case LOAD_LOCAL: {
+                Object value = stack.get(basePointer + argument);
+                stack.add(value);
+                break;
+            }
+
+            case STORE_LOCAL: {
+                Object value = stack.removeLast();
+                stack.set(basePointer + argument, value);
                 break;
             }
 
