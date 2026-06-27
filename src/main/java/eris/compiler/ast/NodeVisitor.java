@@ -24,6 +24,14 @@ public abstract class NodeVisitor<T> {
         return defaultHandler(node);
     }
 
+    public T visit(AssignmentStatementNode node) throws CompilerError {
+        return defaultHandler(node);
+    }
+
+    public T visit(ExpressionStatementNode node) throws CompilerError {
+        return defaultHandler(node);
+    }
+
     public T visit(ReturnStatementNode node) throws CompilerError {
         return defaultHandler(node);
     }

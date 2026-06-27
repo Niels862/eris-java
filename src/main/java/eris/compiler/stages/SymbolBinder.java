@@ -90,12 +90,50 @@ public class SymbolBinder extends NodeVisitor<Void> {
     }
 
     @Override
-    public Void visit(ReturnStatementNode node) {
+    public Void visit(AssignmentStatementNode node) throws CompilerError {
+        node.value.accept(this);
         return null;
     }
 
     @Override
-    public Void visit(IntegerLiteralNode node) {
+    public Void visit(ExpressionStatementNode node) throws CompilerError {
+        node.expression.accept(this);
+        return null;
+    }
+
+    @Override
+    public Void visit(ReturnStatementNode node) throws CompilerError {
+        if (node.value != null) {
+            node.value.accept(this);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visit(CallNode node) throws CompilerError {
+        for (ExpressionNode expression : node.arguments) {
+            expression.accept(this);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visit(IdentifierNode node) throws CompilerError {
+        return null;
+    }
+
+    @Override
+    public Void visit(IntegerLiteralNode node) throws CompilerError {
+        return null;
+    }
+
+    @Override
+    public Void visit(BooleanLiteralNode node) throws CompilerError {
+        return null;
+    }
+
+    @Override
+    public Void visit(StringLiteralNode node) throws CompilerError {
         return null;
     }
 

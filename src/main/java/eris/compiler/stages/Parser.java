@@ -77,7 +77,7 @@ public class Parser {
         if (matches(TokenKind.VAR)) {
             return parseVariable();
         }
-        throw unexpectedTokenError(getToken(), "statement");
+        return parseExpressionStatement();
     }
 
     private VariableNode parseVariable() throws CompilerError {
@@ -108,6 +108,25 @@ public class Parser {
             expect(TokenKind.SEMICOLON);
             return new ReturnStatementNode(token, value);
         }
+    }
+
+    private StatementNode parseExpressionStatement() throws CompilerError {
+        Token token = getToken();
+        ExpressionNode expression = parseExpression();
+
+        if (matches(TokenKind.EQ)) {
+            return parseAssignmentStatement(expression);
+        } else {
+            expect(TokenKind.SEMICOLON);
+            return new ExpressionStatementNode(token, expression);
+        }
+    }
+
+    private AssignmentStatementNode parseAssignmentStatement(ExpressionNode target) throws CompilerError {
+        Token token = expect(TokenKind.EQ);
+        ExpressionNode value = parseExpression();
+        expect(TokenKind.SEMICOLON);
+        return new AssignmentStatementNode(token, target, value);
     }
 
     private List<StatementNode> parseStatementBlock() throws CompilerError {

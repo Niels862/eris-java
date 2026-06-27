@@ -25,6 +25,8 @@ public class SemanticAnalyzer {
     }
 
     public void analyze() throws CompilerError {
+        setupLocalVariables();
+
         Queue<Task> tasks = new ArrayDeque<>();
         tasks.add(new Task(function.block, getInitialState()));
 
@@ -34,13 +36,17 @@ public class SemanticAnalyzer {
         }
     }
 
-    public void setupLocalVariables() throws CompilerError {
+    public void setupLocalVariables() {
         for (VariableSymbol symbol : function.parameters) {
-            localValueIndices.put(symbol, localValueIndices.size());
+            addLocalMapping(symbol);
         }
         for (VariableSymbol symbol : function.locals) {
-            localValueIndices.put(symbol, localValueIndices.size());
+            addLocalMapping(symbol);
         }
+    }
+
+    public void addLocalMapping(VariableSymbol symbol) {
+        localValueIndices.put(symbol, localValueIndices.size());
     }
 
     private SemanticState analyzeBlock(Task task) throws CompilerError {
@@ -135,6 +141,12 @@ public class SemanticAnalyzer {
                 checkType(instruction.symbol.type, valueType, instruction);
             }
             state.setLocal(instruction.symbol, valueType);
+            return null;
+        }
+
+        @Override
+        public Void visit(Pop instruction) throws CompilerError {
+            state.stack.removeLast();
             return null;
         }
 

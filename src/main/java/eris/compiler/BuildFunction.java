@@ -30,7 +30,7 @@ public class BuildFunction {
     }
 
     public void dump() {
-        System.out.println(this.toString() + " : " + symbol);
+        System.out.printf("%s: %s with parameters: %s, and locals: %s%n", this, symbol, parameters, locals);
         block.dump();
         System.out.println();
     }

@@ -1,4 +1,10 @@
+func f() -> int {
+    return 42;
+}
+
 func main() -> int {
-    var x = true;
+    var x = 5;
+    f();
+    x = 3;
     return x;
 }

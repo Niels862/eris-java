@@ -6,7 +6,7 @@ import eris.compiler.symbol.VariableSymbol;
 public class StoreLocal extends IntermediateInstruction {
     public final VariableSymbol symbol;
 
-    public StoreLocal(VariableSymbol symbol, boolean initialAssignment) {
+    public StoreLocal(VariableSymbol symbol) {
         this.symbol = symbol;
     }
 

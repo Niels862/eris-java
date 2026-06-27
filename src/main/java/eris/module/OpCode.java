@@ -4,8 +4,11 @@ public enum OpCode {
     LOAD_CONST(Format.INTEGER),
     LOAD_LOCAL(Format.INTEGER),
     STORE_LOCAL(Format.INTEGER),
+    POP,
+
     CALL(Format.INTEGER),
     RETURN,
+
     HALT;
 
     public final Format format;

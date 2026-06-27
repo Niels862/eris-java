@@ -46,6 +46,17 @@ public class NodeWriter extends NodeVisitor<Void> {
         return null;
     }
 
+    public Void visit(AssignmentStatementNode node) throws CompilerError {
+        write("target", node.target);
+        write("value", node.value);
+        return null;
+    }
+
+    public Void visit(ExpressionStatementNode node) throws CompilerError {
+        write("expression", node.expression);
+        return null;
+    }
+
     @Override
     public Void visit(ReturnStatementNode node) throws CompilerError {
         write("value", node.value);

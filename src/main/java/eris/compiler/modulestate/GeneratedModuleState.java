@@ -22,6 +22,7 @@ public class GeneratedModuleState extends ModuleState {
 
         for (BuildFunction function : functions) {
             SemanticAnalyzer analyzer = new SemanticAnalyzer(module, function);
+            function.dump();
             analyzer.analyze();
             function.dump();
         }

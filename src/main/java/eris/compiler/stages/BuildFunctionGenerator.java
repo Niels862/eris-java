@@ -16,10 +16,12 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
     private final BuildModule module;
 
     private final Queue<Task> taskQueue = new ArrayDeque<>();
-    private final StatementGenerator statementGenerator = new StatementGenerator();
-    private final ExpressionGenerator expressionGenerator = new ExpressionGenerator();
     private FunctionSymbol symbol;
     private final ScopeHandler scopeHandler = new ScopeHandler();
+
+    private final StatementGenerator statementGenerator = new StatementGenerator();
+    private final ExpressionGenerator expressionGenerator = new ExpressionGenerator();
+    private final AssignmentTargetGenerator assignmentTargetGenerator = new AssignmentTargetGenerator();
 
     private IntermediateBlock block;
     private List<VariableSymbol> locals;
@@ -114,6 +116,22 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         taskQueue.add(new Task(node, scopeHandler.getSymbolTable()));
     }
 
+    public VariableSymbol lookupVariableSymbol(Node node, String name) throws CompilerError {
+        Symbol symbol = scopeHandler.getSymbolTable().lookup(name);
+        if (symbol instanceof VariableSymbol variableSymbol) {
+            if (!variableSymbol.isDeclared()) {
+                throw new CompilerError(
+                        module, node.line, node.column,
+                        String.format("Variable %s is referenced before declaration", name));
+            }
+            return variableSymbol;
+        } else if (symbol == null) {
+            throw new CompilerError(module, node.line, node.column, name + " is not declared in this scope");
+        } else {
+            throw new UnsupportedOperationException();
+        }
+    }
+
     public void emit(IntermediateInstruction instruction) {
         block.instructions.add(instruction);
         if (currentNode != null) {
@@ -141,10 +159,24 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         public Void visit(VariableNode node) throws CompilerError {
             if (node.initialValue != null) {
                 expressionGenerator.generate(node.initialValue);
-                emit(new StoreLocal(node.symbol, true));
+                emit(new StoreLocal(node.symbol));
             }
             node.symbol.setDeclared();
             locals.add(node.symbol);
+            return null;
+        }
+
+        @Override
+        public Void visit(AssignmentStatementNode node) throws CompilerError {
+            expressionGenerator.generate(node.value);
+            assignmentTargetGenerator.generate(node.target);
+            return null;
+        }
+
+        @Override
+        public Void visit(ExpressionStatementNode node) throws CompilerError {
+            expressionGenerator.generate(node.expression);
+            emit(new Pop());
             return null;
         }
 
@@ -191,25 +223,28 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
 
         @Override
         public Void visit(IdentifierNode node) throws CompilerError {
-            Symbol symbol = scopeHandler.getSymbolTable().lookup(node.name);
-            if (symbol instanceof VariableSymbol variableSymbol) {
-                if (!variableSymbol.isDeclared()) {
-                    throw new CompilerError(
-                            module, node.line, node.column,
-                            String.format("Variable %s is referenced before declaration", node.name));
-                }
-                emit(new LoadLocal(variableSymbol));
-            } else if (symbol == null) {
-                throw new CompilerError(module, node.line, node.column, node.name + " is not declared in this scope");
-            } else {
-                throw new UnsupportedOperationException();
-            }
+            VariableSymbol symbol = lookupVariableSymbol(node, node.name);
+            emit(new LoadLocal(symbol));
             return null;
         }
 
         @Override
         public Void visit(IntegerLiteralNode node) {
             emit(new LoadConstant(node.value));
+            return null;
+        }
+    }
+
+    private class AssignmentTargetGenerator extends Generator {
+        @Override
+        public Void defaultHandler(Node node) throws CompilerError {
+            throw new CompilerError(module, node.line, node.column, "Invalid assignment target");
+        }
+
+        @Override
+        public Void visit(IdentifierNode node) throws CompilerError {
+            VariableSymbol symbol = lookupVariableSymbol(node, node.name);
+            emit(new StoreLocal(symbol));
             return null;
         }
     }

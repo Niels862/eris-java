@@ -115,6 +115,11 @@ public class Interpreter {
                 break;
             }
 
+            case POP: {
+                stack.removeLast();
+                break;
+            }
+
             case CALL: {
                 Constant constant = constants.get(argument);
                 FunctionReferenceConstant reference = (FunctionReferenceConstant) constant;

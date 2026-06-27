@@ -16,11 +16,15 @@ public enum TokenKind {
     FUNC("func"),
     RETURN("return"),
     VAR("var"),
+    TRUE("true"),
+    FALSE("false"),
 
     INTEGER("integer", true),
     INVALID_INTEGER("integer", true, TokenKind.INTEGER),
 
     STRING("string", true),
+    INVALID_STRING("string", true, TokenKind.STRING),
+
     IDENTIFIER("identifier", true),
     EOF("end of file"),
 

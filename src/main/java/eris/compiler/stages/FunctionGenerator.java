@@ -70,32 +70,38 @@ public class FunctionGenerator {
         }
 
         @Override
-        public Void visit(LoadLocal instruction) throws CompilerError {
+        public Void visit(LoadLocal instruction) {
             emit(OpCode.LOAD_LOCAL, instruction.symbol.getSlotIndex());
             return null;
         }
 
         @Override
-        public Void visit(StoreLocal instruction) throws CompilerError {
+        public Void visit(StoreLocal instruction) {
             emit(OpCode.STORE_LOCAL, instruction.symbol.getSlotIndex());
             return null;
         }
 
         @Override
-        public Void visit(Call instruction) throws CompilerError {
+        public Void visit(Pop instruction) {
+            emit(OpCode.POP);
+            return null;
+        }
+
+        @Override
+        public Void visit(Call instruction) {
             FunctionReferenceConstant constant = constants.getFunctionReferenceConstant(instruction.function);
             emit(OpCode.CALL, constants.getIndexOf(constant));
             return null;
         }
 
         @Override
-        public Void visit(Return instruction) throws CompilerError {
+        public Void visit(Return instruction) {
             emit(OpCode.RETURN);
             return null;
         }
 
         @Override
-        public Void visit(Halt instruction) throws CompilerError {
+        public Void visit(Halt instruction) {
             emit(OpCode.HALT);
             return null;
         }
