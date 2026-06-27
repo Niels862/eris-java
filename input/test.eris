@@ -1,6 +1,5 @@
 func f() -> int {
-    var x = 5;
-    return 42;
+    return g(53);
 }
 
 func g(x: int) -> int {
@@ -8,6 +7,5 @@ func g(x: int) -> int {
 }
 
 func main() -> int {
-    var x = 5;
-    return x;
+    return f();
 }

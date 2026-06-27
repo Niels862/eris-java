@@ -127,10 +127,9 @@ public class Parser {
 
         Token token = getToken();
         while (true) {
-            if (accept(TokenKind.LPAREN) != null) {
-                // TODO: args list
-                expect(TokenKind.RPAREN);
-                expression = new CallNode(token, expression, Collections.emptyList());
+            if (matches(TokenKind.LPAREN)) {
+                List<ExpressionNode> arguments = parseArguments();
+                expression = new CallNode(token, expression, arguments);
             } else {
                 return expression;
             }
@@ -192,6 +191,27 @@ public class Parser {
         } catch (NumberFormatException e) {
             throw invalidTokenError(token);
         }
+    }
+
+    private List<ExpressionNode> parseArguments() throws CompilerError {
+        expect(TokenKind.LPAREN);
+        if (accept(TokenKind.RPAREN) != null) {
+            return Collections.emptyList();
+        }
+
+        List<ExpressionNode> arguments = new ArrayList<>();
+
+        while (!atEnd()) {
+            ExpressionNode expression = parseExpression();
+            arguments.add(expression);
+
+            if (accept(TokenKind.COMMA) == null) {
+                expect(TokenKind.RPAREN);
+                return arguments;
+            }
+        }
+
+        throw unexpectedTokenError(getToken(), "expression");
     }
 
     private Token accept(TokenKind kind) {
