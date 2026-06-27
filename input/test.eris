@@ -1,17 +1,4 @@
-func f() -> int {
-    return g(h());
-}
-
-func g(x: int) -> int {
+func main() -> bool {
+    var x: bool = 5;
     return x;
-}
-
-func h() -> int {
-    var i = 53;
-    var j = i;
-    return j;
-}
-
-func main() -> int {
-    return f();
 }

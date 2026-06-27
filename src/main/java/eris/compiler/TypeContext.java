@@ -9,8 +9,12 @@ public class TypeContext {
     public final ClassSymbol INT_SYMBOL = makeNativeClassSymbol("int");
     public final ClassType INT = INT_SYMBOL.valueType;
 
+    public final ClassSymbol BOOL_SYMBOL = makeNativeClassSymbol("bool");
+    public final ClassType BOOL = BOOL_SYMBOL.valueType;
+
     public final SymbolTable symbolTable = new SymbolTable(new Symbol[]{
-            INT_SYMBOL
+            INT_SYMBOL,
+            BOOL_SYMBOL,
     });
 
     public static final TypeContext instance = new TypeContext();

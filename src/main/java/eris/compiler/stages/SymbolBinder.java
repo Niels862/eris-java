@@ -60,7 +60,8 @@ public class SymbolBinder extends NodeVisitor<Void> {
         }
         scopeHandler.leaveScope(node.scope);
 
-        FunctionType type = new FunctionType(parameterTypes, context.INT);
+        Type returnType = buildType(node.returnType);
+        FunctionType type = new FunctionType(parameterTypes, returnType);
         node.symbol = new FunctionSymbol(node.name, module, node.line, node.column, type);
         scopeHandler.insert(node.name, node.symbol);
         return null;

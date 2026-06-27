@@ -18,12 +18,14 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
     private final Queue<Task> taskQueue = new ArrayDeque<>();
     private final StatementGenerator statementGenerator = new StatementGenerator();
     private final ExpressionGenerator expressionGenerator = new ExpressionGenerator();
-    private Symbol symbol;
+    private FunctionSymbol symbol;
     private final ScopeHandler scopeHandler = new ScopeHandler();
 
     private IntermediateBlock block;
     private List<VariableSymbol> locals;
     private List<VariableSymbol> parameters;
+
+    private Node currentNode;
 
     public BuildFunctionGenerator(BuildModule module) {
         this.module = module;
@@ -100,7 +102,7 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         scopeHandler.enterScope(node.scope);
 
         for (StatementNode statement : node.statements) {
-            statement.accept(statementGenerator);
+            statementGenerator.generate(statement);
         }
 
         scopeHandler.leaveScope(node.scope);
@@ -114,9 +116,21 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
 
     public void emit(IntermediateInstruction instruction) {
         block.instructions.add(instruction);
+        if (currentNode != null) {
+            instruction.setPosition(currentNode.line, currentNode.column);
+        }
     }
 
-    private class StatementGenerator extends NodeVisitor<Void> {
+    private class Generator extends NodeVisitor<Void> {
+        public void generate(Node node) throws CompilerError {
+            Node previousNode = currentNode;
+            currentNode = node;
+            node.accept(this);
+            currentNode = previousNode;
+        }
+    }
+
+    private class StatementGenerator extends Generator {
         @Override
         public Void visit(FunctionNode node) {
             addTask(node);
@@ -126,8 +140,8 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         @Override
         public Void visit(VariableNode node) throws CompilerError {
             if (node.initialValue != null) {
-                node.initialValue.accept(expressionGenerator);
-                emit(new StoreLocal(node.symbol));
+                expressionGenerator.generate(node.initialValue);
+                emit(new StoreLocal(node.symbol, true));
             }
             node.symbol.setDeclared();
             locals.add(node.symbol);
@@ -137,7 +151,7 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         @Override
         public Void visit(ReturnStatementNode node) throws CompilerError {
             if (node.value != null) {
-                node.value.accept(expressionGenerator);
+                expressionGenerator.generate(node.value);
             } else {
                 throw new UnsupportedOperationException();
             }
@@ -146,7 +160,7 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         }
     }
 
-    private class ExpressionGenerator extends NodeVisitor<Void> {
+    private class ExpressionGenerator extends Generator {
         @Override
         public Void visit(CallNode node) throws CompilerError {
             if (node.function instanceof IdentifierNode identifier) {
@@ -166,7 +180,7 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
                 IdentifierNode function,
                 List<ExpressionNode> arguments) throws CompilerError {
             for (ExpressionNode argument : arguments) {
-                argument.accept(this);
+                expressionGenerator.generate(argument);
             }
             emit(new Call(functionSymbol));
         }

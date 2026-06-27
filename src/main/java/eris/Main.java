@@ -18,7 +18,9 @@ public class Main {
         Compiler compiler = new Compiler(name);
         List<Module> modules = compiler.compile();
 
-        Interpreter interpreter = new Interpreter(modules.getFirst());
-        interpreter.run();
+        if (modules != null) {
+            Interpreter interpreter = new Interpreter(modules.getFirst());
+            interpreter.run();
+        }
     }
 }

@@ -2,6 +2,7 @@ package eris.compiler;
 
 import eris.compiler.ast.Node;
 import eris.compiler.ir.IntermediateBlock;
+import eris.compiler.symbol.FunctionSymbol;
 import eris.compiler.symbol.Symbol;
 import eris.compiler.symbol.VariableSymbol;
 
@@ -9,7 +10,7 @@ import java.util.List;
 
 public class BuildFunction {
     public final Node node;
-    public final Symbol symbol;
+    public final FunctionSymbol symbol;
     public final IntermediateBlock block;
 
     public final List<VariableSymbol> parameters;
@@ -17,7 +18,7 @@ public class BuildFunction {
 
     public BuildFunction(
             Node node,
-            Symbol symbol,
+            FunctionSymbol symbol,
             IntermediateBlock block,
             List<VariableSymbol> parameters,
             List<VariableSymbol> locals) {
@@ -31,6 +32,7 @@ public class BuildFunction {
     public void dump() {
         System.out.println(this.toString() + " : " + symbol);
         block.dump();
+        System.out.println();
     }
 
     public String toString() {
