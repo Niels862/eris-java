@@ -5,6 +5,7 @@ import eris.compiler.BuildModule;
 import eris.compiler.CompilerError;
 import eris.compiler.TypeContext;
 import eris.compiler.ir.*;
+import eris.compiler.symbol.VariableSymbol;
 import eris.compiler.type.Type;
 
 import java.util.*;
@@ -15,7 +16,8 @@ public class SemanticAnalyzer {
 
     private final TransferFunctionVisitor transfer = new TransferFunctionVisitor();
     private final TypeContext context = TypeContext.instance;
-    private ContextStringVisitor contextBuilder = new ContextStringVisitor();
+    private final ContextStringVisitor contextBuilder = new ContextStringVisitor();
+    private final Map<VariableSymbol, Integer> localValueIndices = new HashMap<>();
 
     public SemanticAnalyzer(BuildModule module, BuildFunction function) {
         this.module = module;
@@ -32,6 +34,15 @@ public class SemanticAnalyzer {
         }
     }
 
+    public void setupLocalVariables() throws CompilerError {
+        for (VariableSymbol symbol : function.parameters) {
+            localValueIndices.put(symbol, localValueIndices.size());
+        }
+        for (VariableSymbol symbol : function.locals) {
+            localValueIndices.put(symbol, localValueIndices.size());
+        }
+    }
+
     private SemanticState analyzeBlock(Task task) throws CompilerError {
         SemanticState state = task.inState.copy();
 
@@ -43,7 +54,8 @@ public class SemanticAnalyzer {
     }
 
     private SemanticState getInitialState() {
-        return new SemanticState(Collections.emptyList());
+        Type[] locals = new Type[localValueIndices.size()];
+        return new SemanticState(Collections.emptyList(), locals);
     }
 
     private boolean isAssignable(Type target, Type value) {
@@ -57,14 +69,27 @@ public class SemanticAnalyzer {
 
     private class SemanticState {
         public List<Type> stack;
+        private final Type[] locals;
 
-        public SemanticState(List<Type> stack) {
+        public SemanticState(List<Type> stack, Type[] locals) {
             this.stack = stack;
+            this.locals = locals;
+        }
+
+        public Type getLocal(VariableSymbol symbol) {
+            int index = localValueIndices.get(symbol);
+            return locals[index];
+        }
+
+        public void setLocal(VariableSymbol symbol, Type value) {
+            int index = localValueIndices.get(symbol);
+            locals[index] = value;
         }
 
         public SemanticState copy() {
             List<Type> stack = new ArrayList<>(this.stack);
-            return new SemanticState(stack);
+            Type[] locals = this.locals.clone();
+            return new SemanticState(stack, locals);
         }
 
         public void dump() {
@@ -98,14 +123,18 @@ public class SemanticAnalyzer {
 
         @Override
         public Void visit(LoadLocal instruction) throws CompilerError {
-            state.stack.add(instruction.symbol.type);
+            Type valueType = state.getLocal(instruction.symbol);
+            state.stack.add(valueType);
             return null;
         }
 
         @Override
         public Void visit(StoreLocal instruction) throws CompilerError {
             Type valueType = state.stack.removeLast();
-            checkType(instruction.symbol.type, valueType, instruction);
+            if (instruction.symbol.type != null) {
+                checkType(instruction.symbol.type, valueType, instruction);
+            }
+            state.setLocal(instruction.symbol, valueType);
             return null;
         }
 
