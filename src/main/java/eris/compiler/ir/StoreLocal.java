@@ -5,9 +5,11 @@ import eris.compiler.symbol.VariableSymbol;
 
 public class StoreLocal extends IntermediateInstruction {
     public final VariableSymbol symbol;
+    public final boolean isInitializingAssignment;
 
-    public StoreLocal(VariableSymbol symbol) {
+    public StoreLocal(VariableSymbol symbol, boolean isInitializingAssignment) {
         this.symbol = symbol;
+        this.isInitializingAssignment = isInitializingAssignment;
     }
 
     public <T> T accept(IntermediateInstructionVisitor<T> visitor) throws CompilerError {

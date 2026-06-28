@@ -154,10 +154,17 @@ public class SemanticAnalyzer {
         @Override
         public Void visit(StoreLocal instruction) throws CompilerError {
             Type valueType = state.stack.removeLast();
+            VariableSymbol symbol = instruction.symbol;
             if (instruction.symbol.type != null) {
-                checkType(instruction.symbol.type, valueType, instruction);
+                checkType(symbol.type, valueType, instruction);
+            } else if (finalPhase) {
+                if (instruction.isInitializingAssignment) {
+                    symbol.setInferredType(valueType);
+                } else {
+                    checkType(symbol.getInferredType(), valueType, instruction);
+                }
             }
-            state.setLocal(instruction.symbol, valueType);
+            state.setLocal(symbol, valueType);
             return null;
         }
 
@@ -200,14 +207,13 @@ public class SemanticAnalyzer {
         private void checkType(
                 Type target, Type value,
                 IntermediateInstruction instruction) throws CompilerError {
-            System.out.printf("%s <- %s: %b%n", target, value, isAssignable(target, value));
             if (!isAssignable(target, value)) {
                 String contextString = contextBuilder.getContextString(instruction);
                 StringBuilder sb = new StringBuilder();
                 if (contextString != null) {
                     sb.append(contextString).append(": ");
                 }
-                sb.append(String.format("Cannot use %s as %s", value, target));
+                sb.append(String.format("Cannot assign value of type %s to value of type %s", value, target));
                 throw instruction.error(module, sb.toString());
             }
         }

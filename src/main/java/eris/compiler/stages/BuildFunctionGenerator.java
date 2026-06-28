@@ -159,7 +159,7 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         public Void visit(VariableNode node) throws CompilerError {
             if (node.initialValue != null) {
                 expressionGenerator.generate(node.initialValue);
-                emit(new StoreLocal(node.symbol));
+                emit(new StoreLocal(node.symbol, true));
             }
             node.symbol.setDeclared();
             locals.add(node.symbol);
@@ -264,7 +264,7 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         @Override
         public Void visit(IdentifierNode node) throws CompilerError {
             VariableSymbol symbol = lookupVariableSymbol(node, node.name);
-            emit(new StoreLocal(symbol));
+            emit(new StoreLocal(symbol, false));
             return null;
         }
     }

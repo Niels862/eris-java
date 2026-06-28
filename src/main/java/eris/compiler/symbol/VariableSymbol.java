@@ -5,10 +5,10 @@ import eris.compiler.type.Type;
 
 public class VariableSymbol extends Symbol {
     public final Type type;
-    public Type inferredType;
 
     private int slotIndex = -1;
     private boolean isDeclared = false;
+    private Type inferredType;
 
     public VariableSymbol(String name, BuildModule module, int line, int column, Type type) {
         super(name, module, line, column);
@@ -33,6 +33,16 @@ public class VariableSymbol extends Symbol {
     public void setDeclared() {
         assert !isDeclared;
         isDeclared = true;
+    }
+
+    public Type getInferredType() {
+        assert inferredType != null;
+        return inferredType;
+    }
+
+    public void setInferredType(Type inferredType) {
+        assert this.inferredType == null;
+        this.inferredType = inferredType;
     }
 
     @Override
