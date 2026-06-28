@@ -1,11 +1,14 @@
 package eris.runtime;
 
+import eris.compiler.symbol.VariableSymbol;
 import eris.module.Function;
 import eris.module.Instruction;
 import eris.module.Module;
 import eris.module.constant.Constant;
 import eris.module.constant.FunctionReferenceConstant;
 
+import eris.module.constant.IntegerConstant;
+import eris.module.constant.StringConstant;
 import eris.runtime.LoadedModule.ResolvedFunctionReference;
 
 import java.util.ArrayList;
@@ -23,6 +26,7 @@ public class Interpreter {
     private LoadedModule module;
     private Function function;
     private List<Constant> constants;
+    private Object[] resolvedConstants;
     private Instruction[] code;
     private int instructionPointer;
     private int basePointer;
@@ -63,6 +67,7 @@ public class Interpreter {
         this.module = module;
         this.function = function;
         this.constants = module.constants;
+        this.resolvedConstants = module.resolvedConstants;
         this.code = function.code;
         this.instructionPointer = 0;
         this.basePointer = stack.size() - function.numArgs;
@@ -87,6 +92,7 @@ public class Interpreter {
             this.module = frame.module;
             this.function = frame.function;
             this.constants = frame.module.constants;
+            this.resolvedConstants = frame.module.resolvedConstants;
             this.code = frame.function.code;
             this.instructionPointer = frame.instructionPointer;
             this.basePointer = frame.basePointer;
@@ -97,60 +103,78 @@ public class Interpreter {
         int argument = instruction.argument;
 
         switch (instruction.opcode) {
-            case LOAD_CONST: {
-                Constant constant = constants.get(argument);
-                stack.add(constant);
-                break;
+            case LOAD_CONST -> {
+                stack.add(resolvedConstants[argument]);
             }
 
-            case LOAD_LOCAL: {
+            case LOAD_LOCAL -> {
                 Object value = stack.get(basePointer + argument);
                 stack.add(value);
-                break;
             }
 
-            case STORE_LOCAL: {
+            case STORE_LOCAL -> {
                 Object value = stack.removeLast();
                 stack.set(basePointer + argument, value);
-                break;
             }
 
-            case POP: {
+            case POP -> {
                 stack.removeLast();
-                break;
             }
 
-            case EQ: {
+            case EQ -> {
                 Object value1 = stack.removeLast();
                 Object value2 = stack.removeLast();
-                stack.add(value1 == value2);
-                break;
+                stack.add(value1 == value2 ? 1 : 0);
             }
 
-            case NEQ: {
+            case NEQ -> {
                 Object value1 = stack.removeLast();
                 Object value2 = stack.removeLast();
-                stack.add(value1 != value2);
-                break;
+                stack.add(value1 != value2 ? 1 : 0);
             }
 
-            case CALL: {
+            case JUMP -> {
+                instructionPointer += argument;
+            }
+
+            case BRANCH_IF_TRUE -> {
+                Object value = stack.removeLast();
+                if (value instanceof Integer integer) {
+                    if (integer == 1) {
+                        instructionPointer += argument;
+                    }
+                } else {
+                    throw new RuntimeException(value.getClass().toString());
+                }
+            }
+
+            case BRANCH_IF_FALSE -> {
+                Object value = stack.removeLast();
+                if (value instanceof Integer integer) {
+                    if (integer == 0) {
+                        instructionPointer += argument;
+                    }
+                } else {
+                    throw new RuntimeException(value.getClass().toString());
+                }
+            }
+
+            case CALL -> {
                 Constant constant = constants.get(argument);
                 FunctionReferenceConstant reference = (FunctionReferenceConstant) constant;
                 ResolvedFunctionReference resolved = module.resolveFunction(reference);
                 enterFunction(resolved.module, resolved.function);
-                break;
             }
 
-            case RETURN: {
+            case RETURN -> {
                 exitFunction();
-                break;
             }
 
-            case HALT: {
+            case HALT -> {
                 halted = true;
-                break;
             }
+
+            default -> throw new UnsupportedOperationException("Unsupported instruction opcode: " + instruction.opcode);
         }
     }
 

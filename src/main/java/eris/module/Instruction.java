@@ -13,8 +13,10 @@ public class Instruction {
         return switch (opcode.format) {
             case NO_ARGUMENT
                     -> opcode.toString();
-            case INTEGER
-                    -> opcode.toString() + " " + argument;
+
+            case INTEGER, JUMP_TARGET
+                    -> opcode + " " + argument;
+
         };
     }
 }

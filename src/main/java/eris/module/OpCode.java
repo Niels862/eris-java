@@ -9,6 +9,10 @@ public enum OpCode {
     EQ,
     NEQ,
 
+    JUMP(Format.JUMP_TARGET),
+    BRANCH_IF_TRUE(Format.JUMP_TARGET),
+    BRANCH_IF_FALSE(Format.JUMP_TARGET),
+
     CALL(Format.INTEGER),
     RETURN,
 
@@ -26,6 +30,7 @@ public enum OpCode {
 
     public enum Format {
         NO_ARGUMENT,
-        INTEGER
+        INTEGER,
+        JUMP_TARGET,
     }
 }

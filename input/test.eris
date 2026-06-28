@@ -1,11 +1,8 @@
-func f(y: int) -> int {
-    return y;
-}
-
 func main() -> int {
-    var x = 5;
     if true {
-        x = f(42);
+        return 4;
+    } else {
+        return 6;
     }
-    return x;
+    return 0;
 }

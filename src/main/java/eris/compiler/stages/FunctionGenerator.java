@@ -11,7 +11,9 @@ import eris.module.constant.Constant;
 import eris.module.constant.FunctionReferenceConstant;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class FunctionGenerator {
     private final BuildFunction function;
@@ -33,9 +35,24 @@ public class FunctionGenerator {
             local.setSlotIndex(slotIndex++);
         }
 
+        Map<Integer, Integer> blockOffsets = new HashMap<>();
+
         InstructionEmitter emitter = new InstructionEmitter();
-        for (IntermediateInstruction instruction : function.blocks.getFirst().instructions) {
-            emitter.emit(instruction);
+        for (int i = 0; i < function.blocks.size(); i++) {
+            BasicBlock block = function.blocks.get(i);
+            blockOffsets.put(block.id, code.size());
+
+            for (IntermediateInstruction instruction : block.instructions) {
+                emitter.emit(instruction);
+            }
+        }
+
+        for (int i = 0; i < code.size(); i++) {
+            Instruction instruction = code.get(i);
+            if (instruction.opcode.format == OpCode.Format.JUMP_TARGET) {
+                int jumpOffset = blockOffsets.get(instruction.argument) - i - 1;
+                code.set(i, new Instruction(instruction.opcode, jumpOffset));
+            }
         }
 
         return new Function(function.symbol.name, makeCodeArray(), function.parameters.size(), function.locals.size());
@@ -95,7 +112,7 @@ public class FunctionGenerator {
         }
 
         @Override
-        public Void visit(BinaryOperation instruction) throws CompilerError {
+        public Void visit(BinaryOperation instruction) {
             switch (instruction.operator) {
                 case "==="
                         -> emit(OpCode.EQ);
@@ -106,6 +123,19 @@ public class FunctionGenerator {
                 default
                         -> throw new RuntimeException("Unexpected operator: " + instruction.operator);
             }
+            return null;
+        }
+
+        @Override
+        public Void visit(Jump instruction) {
+            emit(OpCode.JUMP, instruction.out.id);
+            return null;
+        }
+
+        @Override
+        public Void visit(Branch instruction) {
+            emit(OpCode.BRANCH_IF_TRUE, instruction.thenOut.id);
+            emit(OpCode.JUMP, instruction.elseOut.id);
             return null;
         }
 
