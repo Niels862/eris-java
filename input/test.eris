@@ -2,9 +2,7 @@ func f() -> int {
     return 42;
 }
 
-func main() -> int {
+func main() -> bool {
     var x = 5;
-    f();
-    x = 3;
-    return x;
+    return x === 5;
 }

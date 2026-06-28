@@ -5,6 +5,7 @@ import eris.compiler.type.Type;
 
 public class VariableSymbol extends Symbol {
     public final Type type;
+    public Type inferredType;
 
     private int slotIndex = -1;
     private boolean isDeclared = false;

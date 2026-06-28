@@ -6,6 +6,9 @@ public enum OpCode {
     STORE_LOCAL(Format.INTEGER),
     POP,
 
+    EQ,
+    NEQ,
+
     CALL(Format.INTEGER),
     RETURN,
 

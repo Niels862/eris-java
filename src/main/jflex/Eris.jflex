@@ -22,7 +22,7 @@ WhiteSpace = [ \t\r|\n|\r\n]
 
 Identifier = [A-Za-z_][A-Za-z0-9_]*
 
-IntegerLiteral = -? (0 | [0-9_]* | 0x[0-9A-Fa-z_]* | 0b[01_]* | 0u[1_]*1)
+IntegerLiteral = -? (0 | [0-9_]+ | 0x[0-9A-Fa-z_]+ | 0b[01_]+ | 0u[1_]+)
 InvalidIntegerLiteral = -? [0-9][A-Za-z0-9_]*
 
 %%
@@ -35,6 +35,8 @@ InvalidIntegerLiteral = -? [0-9][A-Za-z0-9_]*
   "true"                    { return token(TokenKind.TRUE); }
   "false"                   { return token(TokenKind.FALSE); }
 
+  "==="                     { return token(TokenKind.EQEQEQ); }
+  "!=="                     { return token(TokenKind.NEQEQ); }
   "->"                      { return token(TokenKind.ARROW); }
   "("                       { return token(TokenKind.LPAREN); }
   ")"                       { return token(TokenKind.RPAREN); }

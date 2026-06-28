@@ -12,6 +12,10 @@ public enum TokenKind {
     SEMICOLON(";"),
     COLON(":"),
     EQ("="),
+    EQEQ("=="),
+    NEQ("!="),
+    EQEQEQ("==="),
+    NEQEQ("!=="),
 
     FUNC("func"),
     RETURN("return"),

@@ -194,6 +194,14 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
 
     private class ExpressionGenerator extends Generator {
         @Override
+        public Void visit(BinaryOperationNode node) throws CompilerError {
+            expressionGenerator.generate(node.left);
+            expressionGenerator.generate(node.right);
+            emit(new BinaryOperation(node.operator));
+            return null;
+        }
+
+        @Override
         public Void visit(CallNode node) throws CompilerError {
             if (node.function instanceof IdentifierNode identifier) {
                 Symbol symbol = scopeHandler.getSymbolTable().lookup(identifier.name);
@@ -230,6 +238,18 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
 
         @Override
         public Void visit(IntegerLiteralNode node) {
+            emit(new LoadConstant(node.value));
+            return null;
+        }
+
+        @Override
+        public Void visit(BooleanLiteralNode node) throws CompilerError {
+            emit(new LoadConstant(node.value));
+            return null;
+        }
+
+        @Override
+        public Void visit(StringLiteralNode node) throws CompilerError {
             emit(new LoadConstant(node.value));
             return null;
         }

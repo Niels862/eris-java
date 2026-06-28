@@ -146,7 +146,17 @@ public class Parser {
     }
 
     private ExpressionNode parseExpression() throws CompilerError {
-        return parsePostfixExpression();
+        return parseEqualityExpression();
+    }
+
+    private ExpressionNode parseEqualityExpression() throws CompilerError {
+        return parseNotAssociativeBinaryExpression(
+                this::parsePostfixExpression,
+                (kind) -> switch (kind) {
+                    case EQEQ, NEQ, EQEQEQ, NEQEQ -> true;
+                    default -> false;
+                }
+        );
     }
 
     private ExpressionNode parsePostfixExpression() throws CompilerError {
@@ -170,6 +180,12 @@ public class Parser {
         }
         if (accept(TokenKind.INTEGER) != null) {
             return parseInteger(token);
+        }
+        if (accept(TokenKind.TRUE) != null) {
+            return new BooleanLiteralNode(token, true);
+        }
+        if (accept(TokenKind.FALSE) != null) {
+            return new BooleanLiteralNode(token, false);
         }
         System.out.printf("%s %s%n", token, TokenKind.INTEGER);
         throw unexpectedTokenError(token, "expression");
@@ -241,6 +257,32 @@ public class Parser {
         throw unexpectedTokenError(getToken(), "expression");
     }
 
+    private ExpressionNode parseLeftAssociativeBinaryOperation(
+            ExpressionProducer operandProducer, TokenKindMatcher matcher) throws CompilerError {
+        ExpressionNode node = operandProducer.produce();
+
+        while (matcher.matches(getToken().kind)) {
+            Token operator = nextToken();
+            ExpressionNode right = operandProducer.produce();
+            node = new BinaryOperationNode(operator, operator.text, node, right);
+        }
+
+        return node;
+    }
+
+    private ExpressionNode parseNotAssociativeBinaryExpression(
+            ExpressionProducer producer, TokenKindMatcher matcher) throws CompilerError {
+        ExpressionNode node = producer.produce();
+
+        if (matcher.matches(getToken().kind)) {
+            Token operator = nextToken();
+            ExpressionNode right = producer.produce();
+            return new BinaryOperationNode(operator, operator.text, node, right);
+        }
+
+        return node;
+    }
+
     private TypeNode parseTypeAnnotation() throws CompilerError {
         Token name = expect(TokenKind.IDENTIFIER);
         return new NamedTypeNode(name, name.text);
@@ -304,5 +346,13 @@ public class Parser {
         public ParserError(Token token, String message) {
             super(module, token.line, token.column, message);
         }
+    }
+
+    interface ExpressionProducer {
+        ExpressionNode produce() throws CompilerError;
+    }
+
+    interface TokenKindMatcher {
+        boolean matches(TokenKind kind);
     }
 }

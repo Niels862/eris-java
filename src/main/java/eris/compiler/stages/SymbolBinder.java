@@ -110,6 +110,13 @@ public class SymbolBinder extends NodeVisitor<Void> {
     }
 
     @Override
+    public Void visit(BinaryOperationNode node) throws CompilerError {
+        node.left.accept(this);
+        node.right.accept(this);
+        return null;
+    }
+
+    @Override
     public Void visit(CallNode node) throws CompilerError {
         for (ExpressionNode expression : node.arguments) {
             expression.accept(this);

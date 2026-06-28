@@ -64,6 +64,14 @@ public class NodeWriter extends NodeVisitor<Void> {
     }
 
     @Override
+    public Void visit(BinaryOperationNode node) throws CompilerError {
+        write("operator", node.operator);
+        write("left", node.left);
+        write("right", node.right);
+        return null;
+    }
+
+    @Override
     public Void visit(CallNode node) throws CompilerError {
         write("function", node.function);
         write("arguments", node.arguments);

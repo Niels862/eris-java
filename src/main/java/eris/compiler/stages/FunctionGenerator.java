@@ -58,12 +58,19 @@ public class FunctionGenerator {
 
         @Override
         public Void visit(LoadConstant instruction) {
-            Constant constant;
-            if (instruction.constant instanceof Integer integer) {
-                constant = constants.getIntegerConstant(integer);
-            } else {
-                throw new RuntimeException("Unexpected constant type: " + instruction.constant);
-            }
+            Constant constant = switch (instruction.constant) {
+                case Integer integerConstant
+                        -> constants.getIntegerConstant(integerConstant);
+
+                case Boolean booleanConstant
+                        -> constants.getIntegerConstant(booleanConstant ? 1 : 0);
+
+                case String stringConstant
+                        -> constants.getStringConstant(stringConstant);
+
+                case null, default
+                        -> throw new RuntimeException("Unexpected constant type: " + instruction.constant);
+            };
 
             emit(OpCode.LOAD_CONST, constants.getIndexOf(constant));
             return null;
@@ -84,6 +91,21 @@ public class FunctionGenerator {
         @Override
         public Void visit(Pop instruction) {
             emit(OpCode.POP);
+            return null;
+        }
+
+        @Override
+        public Void visit(BinaryOperation instruction) throws CompilerError {
+            switch (instruction.operator) {
+                case "==="
+                        -> emit(OpCode.EQ);
+
+                case "!=="
+                        -> emit(OpCode.NEQ);
+
+                default
+                        -> throw new RuntimeException("Unexpected operator: " + instruction.operator);
+            }
             return null;
         }
 

@@ -36,6 +36,10 @@ public abstract class NodeVisitor<T> {
         return defaultHandler(node);
     }
 
+    public T visit(BinaryOperationNode node) throws CompilerError {
+        return defaultHandler(node);
+    }
+
     public T visit(CallNode node) throws CompilerError {
         return defaultHandler(node);
     }

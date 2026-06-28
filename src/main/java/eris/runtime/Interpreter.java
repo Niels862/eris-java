@@ -120,6 +120,20 @@ public class Interpreter {
                 break;
             }
 
+            case EQ: {
+                Object value1 = stack.removeLast();
+                Object value2 = stack.removeLast();
+                stack.add(value1 == value2);
+                break;
+            }
+
+            case NEQ: {
+                Object value1 = stack.removeLast();
+                Object value2 = stack.removeLast();
+                stack.add(value1 != value2);
+                break;
+            }
+
             case CALL: {
                 Constant constant = constants.get(argument);
                 FunctionReferenceConstant reference = (FunctionReferenceConstant) constant;

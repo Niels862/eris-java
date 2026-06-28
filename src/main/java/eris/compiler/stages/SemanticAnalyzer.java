@@ -18,6 +18,7 @@ public class SemanticAnalyzer {
     private final TypeContext context = TypeContext.instance;
     private final ContextStringVisitor contextBuilder = new ContextStringVisitor();
     private final Map<VariableSymbol, Integer> localValueIndices = new HashMap<>();
+    private final Map<IntermediateBlock, SemanticState> inStates = new HashMap<>();
 
     public SemanticAnalyzer(BuildModule module, BuildFunction function) {
         this.module = module;
@@ -26,17 +27,11 @@ public class SemanticAnalyzer {
 
     public void analyze() throws CompilerError {
         setupLocalVariables();
-
-        Queue<Task> tasks = new ArrayDeque<>();
-        tasks.add(new Task(function.block, getInitialState()));
-
-        while (!tasks.isEmpty()) {
-            Task task = tasks.remove();
-            SemanticState outState = analyzeBlock(task);
-        }
+        doConvergencePhase();
+        doFinalPhase();
     }
 
-    public void setupLocalVariables() {
+    private void setupLocalVariables() {
         for (VariableSymbol symbol : function.parameters) {
             addLocalMapping(symbol);
         }
@@ -45,14 +40,33 @@ public class SemanticAnalyzer {
         }
     }
 
-    public void addLocalMapping(VariableSymbol symbol) {
+    private void doConvergencePhase() throws CompilerError {
+        Queue<IntermediateBlock> tasks = new ArrayDeque<>();
+        tasks.add(function.block);
+
+        inStates.put(function.block, getInitialState());
+
+        while (!tasks.isEmpty()) {
+            IntermediateBlock block = tasks.remove();
+            SemanticState inState = inStates.get(block);
+            SemanticState outState = analyzeBlock(block, inState);
+        }
+    }
+
+    private void doFinalPhase() throws CompilerError {
+        transfer.enableFinalPhase();
+        SemanticState inState = inStates.get(function.block);
+        analyzeBlock(function.block, inState);
+    }
+
+    private void addLocalMapping(VariableSymbol symbol) {
         localValueIndices.put(symbol, localValueIndices.size());
     }
 
-    private SemanticState analyzeBlock(Task task) throws CompilerError {
-        SemanticState state = task.inState.copy();
+    private SemanticState analyzeBlock(IntermediateBlock block, SemanticState inState) throws CompilerError {
+        SemanticState state = inState.copy();
 
-        for (IntermediateInstruction instruction : task.block.instructions) {
+        for (IntermediateInstruction instruction : block.instructions) {
             transfer.apply(state, instruction);
         }
 
@@ -67,11 +81,6 @@ public class SemanticAnalyzer {
     private boolean isAssignable(Type target, Type value) {
         return target == value;
     }
-
-    private record Task(
-            IntermediateBlock block,
-            SemanticState inState
-    ) {}
 
     private class SemanticState {
         public List<Type> stack;
@@ -108,6 +117,7 @@ public class SemanticAnalyzer {
 
     private class TransferFunctionVisitor extends IntermediateInstructionVisitor<Void> {
         private SemanticState state;
+        private boolean finalPhase = false;
 
         public void apply(SemanticState state, IntermediateInstruction instruction) throws CompilerError {
             this.state = state;
@@ -119,10 +129,17 @@ public class SemanticAnalyzer {
 
         @Override
         public Void visit(LoadConstant instruction) throws CompilerError {
-            if (instruction.constant instanceof Integer) {
-                state.stack.add(context.INT);
-            } else {
-                throw new UnsupportedOperationException(instruction.constant.toString());
+            switch (instruction.constant) {
+                case Integer ignored
+                        -> state.stack.add(context.INT);
+
+                case Boolean ignored
+                        -> state.stack.add(context.BOOL);
+
+                case String ignored
+                        -> state.stack.add(context.STRING);
+
+                default -> throw new UnsupportedOperationException(instruction.constant.toString());
             }
             return null;
         }
@@ -147,6 +164,14 @@ public class SemanticAnalyzer {
         @Override
         public Void visit(Pop instruction) throws CompilerError {
             state.stack.removeLast();
+            return null;
+        }
+
+        @Override
+        public Void visit(BinaryOperation instruction) throws CompilerError {
+            Type right = state.stack.removeLast();
+            Type left = state.stack.removeLast();
+            state.stack.add(context.BOOL);
             return null;
         }
 
@@ -185,6 +210,10 @@ public class SemanticAnalyzer {
                 sb.append(String.format("Cannot use %s as %s", value, target));
                 throw instruction.error(module, sb.toString());
             }
+        }
+
+        public void enableFinalPhase() {
+            this.finalPhase = true;
         }
     }
 

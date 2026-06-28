@@ -12,9 +12,13 @@ public class TypeContext {
     public final ClassSymbol BOOL_SYMBOL = makeNativeClassSymbol("bool");
     public final ClassType BOOL = BOOL_SYMBOL.valueType;
 
+    public final ClassSymbol STRING_SYMBOL = makeNativeClassSymbol("string");
+    public final ClassType STRING = STRING_SYMBOL.valueType;
+
     public final SymbolTable symbolTable = new SymbolTable(new Symbol[]{
             INT_SYMBOL,
             BOOL_SYMBOL,
+            STRING_SYMBOL,
     });
 
     public static final TypeContext instance = new TypeContext();
