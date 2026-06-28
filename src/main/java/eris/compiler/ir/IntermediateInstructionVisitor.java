@@ -2,8 +2,6 @@ package eris.compiler.ir;
 
 import eris.compiler.CompilerError;
 
-import java.lang.classfile.instruction.SwitchCase;
-
 public abstract class IntermediateInstructionVisitor<T> {
     public T defaultHandler(IntermediateInstruction instruction) throws CompilerError {
         String string = String.format("%s does not implement %s", getClass().getSimpleName(), instruction.getClass().getSimpleName());
@@ -27,6 +25,14 @@ public abstract class IntermediateInstructionVisitor<T> {
     }
 
     public T visit(BinaryOperation instruction) throws CompilerError {
+        return defaultHandler(instruction);
+    }
+
+    public T visit(Branch instruction) throws CompilerError {
+        return defaultHandler(instruction);
+    }
+
+    public T visit(Jump instruction) throws CompilerError {
         return defaultHandler(instruction);
     }
 

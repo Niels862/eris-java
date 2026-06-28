@@ -18,7 +18,7 @@ public class SemanticAnalyzer {
     private final TypeContext context = TypeContext.instance;
     private final ContextStringVisitor contextBuilder = new ContextStringVisitor();
     private final Map<VariableSymbol, Integer> localValueIndices = new HashMap<>();
-    private final Map<IntermediateBlock, SemanticState> inStates = new HashMap<>();
+    private final Map<BasicBlock, SemanticState> inStates = new HashMap<>();
 
     public SemanticAnalyzer(BuildModule module, BuildFunction function) {
         this.module = module;
@@ -41,13 +41,13 @@ public class SemanticAnalyzer {
     }
 
     private void doConvergencePhase() throws CompilerError {
-        Queue<IntermediateBlock> tasks = new ArrayDeque<>();
-        tasks.add(function.block);
+        Queue<BasicBlock> tasks = new ArrayDeque<>();
+        tasks.add(function.blocks.getFirst());
 
-        inStates.put(function.block, getInitialState());
+        inStates.put(function.blocks.getFirst(), getInitialState());
 
         while (!tasks.isEmpty()) {
-            IntermediateBlock block = tasks.remove();
+            BasicBlock block = tasks.remove();
             SemanticState inState = inStates.get(block);
             SemanticState outState = analyzeBlock(block, inState);
         }
@@ -55,15 +55,15 @@ public class SemanticAnalyzer {
 
     private void doFinalPhase() throws CompilerError {
         transfer.enableFinalPhase();
-        SemanticState inState = inStates.get(function.block);
-        analyzeBlock(function.block, inState);
+        SemanticState inState = inStates.get(function.blocks.getFirst());
+        analyzeBlock(function.blocks.getFirst(), inState);
     }
 
     private void addLocalMapping(VariableSymbol symbol) {
         localValueIndices.put(symbol, localValueIndices.size());
     }
 
-    private SemanticState analyzeBlock(IntermediateBlock block, SemanticState inState) throws CompilerError {
+    private SemanticState analyzeBlock(BasicBlock block, SemanticState inState) throws CompilerError {
         SemanticState state = inState.copy();
 
         for (IntermediateInstruction instruction : block.instructions) {
@@ -75,6 +75,10 @@ public class SemanticAnalyzer {
 
     private SemanticState getInitialState() {
         Type[] locals = new Type[localValueIndices.size()];
+        for (VariableSymbol parameter : function.parameters) {
+            int index = localValueIndices.get(parameter);
+            locals[index] = parameter.type;
+        }
         return new SemanticState(Collections.emptyList(), locals);
     }
 
@@ -147,6 +151,9 @@ public class SemanticAnalyzer {
         @Override
         public Void visit(LoadLocal instruction) throws CompilerError {
             Type valueType = state.getLocal(instruction.symbol);
+            if (valueType == null) {
+                throw instruction.error(module, String.format("%s is not defined", instruction.symbol.name));
+            }
             state.stack.add(valueType);
             return null;
         }

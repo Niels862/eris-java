@@ -19,6 +19,8 @@ public enum TokenKind {
 
     FUNC("func"),
     RETURN("return"),
+    IF("if"),
+    ELSE("else"),
     VAR("var"),
     TRUE("true"),
     FALSE("false"),

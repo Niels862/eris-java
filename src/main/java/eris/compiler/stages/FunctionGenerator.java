@@ -34,7 +34,7 @@ public class FunctionGenerator {
         }
 
         InstructionEmitter emitter = new InstructionEmitter();
-        for (IntermediateInstruction instruction : function.block.instructions) {
+        for (IntermediateInstruction instruction : function.blocks.getFirst().instructions) {
             emitter.emit(instruction);
         }
 

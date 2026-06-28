@@ -2,12 +2,20 @@ package eris.compiler.ir;
 
 import eris.compiler.CompilerError;
 
-public class Return extends TerminatorInstruction {
+public class Jump extends TerminatorInstruction {
+    public final BasicBlock jump;
+
+    public Jump(BasicBlock jump) {
+        this.jump = jump;
+    }
+
+    @Override
     public <T> T accept(IntermediateInstructionVisitor<T> visitor) throws CompilerError {
         return visitor.visit(this);
     }
 
+    @Override
     public String toString() {
-        return "RETURN";
+        return "JUMP " + jump;
     }
 }

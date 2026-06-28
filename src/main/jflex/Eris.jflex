@@ -31,6 +31,8 @@ InvalidIntegerLiteral = -? [0-9][A-Za-z0-9_]*
 <YYINITIAL> {
   "func"                    { return token(TokenKind.FUNC); }
   "return"                  { return token(TokenKind.RETURN); }
+  "if"                      { return token(TokenKind.IF); }
+  "else"                    { return token(TokenKind.ELSE); }
   "var"                     { return token(TokenKind.VAR); }
   "true"                    { return token(TokenKind.TRUE); }
   "false"                   { return token(TokenKind.FALSE); }

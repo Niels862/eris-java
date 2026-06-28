@@ -1,9 +1,11 @@
-func f() -> int {
-    return 42;
+func f(y: int) -> int {
+    return y;
 }
 
-func main() -> bool {
+func main() -> int {
     var x = 5;
-    x = true;
+    if true {
+        x = f(42);
+    }
     return x;
 }

@@ -52,6 +52,15 @@ public class NodeWriter extends NodeVisitor<Void> {
         return null;
     }
 
+    @Override
+    public Void visit(IfElseStatementNode node) throws CompilerError {
+        write("condition", node.condition);
+        write("trueBranch", node.thenBody);
+        write("falseBranch", node.elseBody);
+        return null;
+
+    }
+
     public Void visit(ExpressionStatementNode node) throws CompilerError {
         write("expression", node.expression);
         return null;

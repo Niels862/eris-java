@@ -96,6 +96,23 @@ public class SymbolBinder extends NodeVisitor<Void> {
     }
 
     @Override
+    public Void visit(IfElseStatementNode node) throws CompilerError {
+        node.thenScope = scopeHandler.enterNewScope();
+        node.condition.accept(this);
+        for (StatementNode statement : node.thenBody) {
+            statement.accept(this);
+        }
+        scopeHandler.leaveScope(node.thenScope);
+
+        node.elseScope = scopeHandler.enterNewScope();
+        for (StatementNode statement : node.elseBody) {
+            statement.accept(this);
+        }
+        scopeHandler.leaveScope(node.elseScope);
+        return null;
+    }
+
+    @Override
     public Void visit(ExpressionStatementNode node) throws CompilerError {
         node.expression.accept(this);
         return null;

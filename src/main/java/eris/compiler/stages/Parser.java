@@ -6,6 +6,7 @@ import eris.compiler.Token;
 import eris.compiler.TokenKind;
 import eris.compiler.ast.*;
 
+import java.beans.Expression;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -71,11 +72,14 @@ public class Parser {
     }
 
     private StatementNode parseStatement() throws CompilerError {
-        if (matches(TokenKind.RETURN)) {
-            return parseReturnStatement();
-        }
         if (matches(TokenKind.VAR)) {
             return parseVariable();
+        }
+        if (matches(TokenKind.IF)) {
+            return parseIfElseStatement();
+        }
+        if (matches(TokenKind.RETURN)) {
+            return parseReturnStatement();
         }
         return parseExpressionStatement();
     }
@@ -96,6 +100,26 @@ public class Parser {
 
         expect(TokenKind.SEMICOLON);
         return new VariableNode(name, name.text, initialValue, type);
+    }
+
+    private IfElseStatementNode parseIfElseStatement() throws CompilerError {
+        Token token = expect(TokenKind.IF);
+        ExpressionNode condition = parseExpression();
+        List<StatementNode> trueBranch = parseStatementBlock();
+
+        List<StatementNode> falseBranch;
+        if (accept(TokenKind.ELSE) != null) {
+            if (matches(TokenKind.IF)) {
+                IfElseStatementNode nested = parseIfElseStatement();
+                falseBranch = Collections.singletonList(nested);
+            } else {
+                falseBranch = parseStatementBlock();
+            }
+        } else {
+            falseBranch = Collections.emptyList();
+        }
+
+        return new IfElseStatementNode(token, condition, trueBranch, falseBranch);
     }
 
     private ReturnStatementNode parseReturnStatement() throws CompilerError {
@@ -187,7 +211,6 @@ public class Parser {
         if (accept(TokenKind.FALSE) != null) {
             return new BooleanLiteralNode(token, false);
         }
-        System.out.printf("%s %s%n", token, TokenKind.INTEGER);
         throw unexpectedTokenError(token, "expression");
     }
 

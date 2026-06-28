@@ -7,10 +7,7 @@ import eris.compiler.ast.*;
 import eris.compiler.ir.*;
 import eris.compiler.symbol.*;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
 public class BuildFunctionGenerator extends NodeVisitor<Void> {
     private final BuildModule module;
@@ -23,9 +20,11 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
     private final ExpressionGenerator expressionGenerator = new ExpressionGenerator();
     private final AssignmentTargetGenerator assignmentTargetGenerator = new AssignmentTargetGenerator();
 
-    private IntermediateBlock block;
+    private List<BasicBlock> blocks;
+    private BasicBlock block;
     private List<VariableSymbol> locals;
     private List<VariableSymbol> parameters;
+    private int nextBlockId;
 
     private Node currentNode;
 
@@ -50,13 +49,16 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         buildTaskPrologue(task);
         task.node.accept(this);
         buildTaskEpilogue(task);
-        return new BuildFunction(task.node, symbol, block, parameters, locals);
+        return new BuildFunction(task.node, symbol, blocks, parameters, locals);
     }
 
     private void buildTaskPrologue(Task task) throws CompilerError {
-        block = new IntermediateBlock(0);
+        nextBlockId = 0;
+        blocks = new ArrayList<>();
+        block = new BasicBlock(nextBlockId++);
         locals = new ArrayList<>();
         parameters = new ArrayList<>();
+        blocks.add(block);
 
         if (task.node instanceof FunctionNode functionNode) {
             for (ParameterNode parameter : functionNode.parameters) {
@@ -72,7 +74,6 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
 
     private void buildTaskEpilogue(Task task) throws CompilerError {
         assert symbol != null;
-
         if (task.enclosing != null) {
             scopeHandler.leaveScope(task.enclosing);
         }
@@ -139,6 +140,19 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         }
     }
 
+    public void addBlock(BasicBlock block) {
+        if (!(this.block.getLast() instanceof TerminatorInstruction)) {
+            emit(new Jump(block));
+        }
+
+        this.block = block;
+        blocks.add(block);
+    }
+
+    public BasicBlock makeBlock() {
+        return new BasicBlock(nextBlockId++);
+    }
+
     private class Generator extends NodeVisitor<Void> {
         public void generate(Node node) throws CompilerError {
             Node previousNode = currentNode;
@@ -170,6 +184,29 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         public Void visit(AssignmentStatementNode node) throws CompilerError {
             expressionGenerator.generate(node.value);
             assignmentTargetGenerator.generate(node.target);
+            return null;
+        }
+
+        @Override
+        public Void visit(IfElseStatementNode node) throws CompilerError {
+            expressionGenerator.generate(node.condition);
+
+            BasicBlock thenBlock = makeBlock();
+            BasicBlock elseBlock = makeBlock();
+            BasicBlock exitBlock = makeBlock();
+
+            emit(new Branch(thenBlock, elseBlock));
+            addBlock(thenBlock);
+            for (StatementNode statement : node.thenBody) {
+                statementGenerator.generate(statement);
+            }
+            emit(new Jump(exitBlock));
+
+            addBlock(elseBlock);
+            for (StatementNode statement : node.elseBody) {
+                statementGenerator.generate(statement);
+            }
+            addBlock(exitBlock);
             return null;
         }
 

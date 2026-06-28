@@ -28,6 +28,10 @@ public abstract class NodeVisitor<T> {
         return defaultHandler(node);
     }
 
+    public T visit(IfElseStatementNode node) throws CompilerError {
+        return defaultHandler(node);
+    }
+
     public T visit(ExpressionStatementNode node) throws CompilerError {
         return defaultHandler(node);
     }
