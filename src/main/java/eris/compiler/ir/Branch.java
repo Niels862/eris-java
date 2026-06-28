@@ -3,12 +3,12 @@ package eris.compiler.ir;
 import eris.compiler.CompilerError;
 
 public class Branch extends TerminatorInstruction {
-    public final BasicBlock thenBranch;
-    public final BasicBlock elseBranch;
+    public final BasicBlock thenOut;
+    public final BasicBlock elseOut;
 
-    public Branch(BasicBlock thenBranch, BasicBlock elseBranch) {
-        this.thenBranch = thenBranch;
-        this.elseBranch = elseBranch;
+    public Branch(BasicBlock thenOut, BasicBlock elseOut) {
+        this.thenOut = thenOut;
+        this.elseOut = elseOut;
     }
 
     @Override
@@ -18,6 +18,6 @@ public class Branch extends TerminatorInstruction {
 
     @Override
     public String toString() {
-        return "BRANCH " + thenBranch + " : " + elseBranch;
+        return "BRANCH " + thenOut + " : " + elseOut;
     }
 }

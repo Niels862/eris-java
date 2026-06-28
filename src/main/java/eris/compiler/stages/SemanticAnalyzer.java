@@ -13,16 +13,19 @@ import java.util.*;
 public class SemanticAnalyzer {
     private final BuildModule module;
     private final BuildFunction function;
+    private final BasicBlock entryBlock;
 
     private final TransferFunctionVisitor transfer = new TransferFunctionVisitor();
     private final TypeContext context = TypeContext.instance;
     private final ContextStringVisitor contextBuilder = new ContextStringVisitor();
     private final Map<VariableSymbol, Integer> localValueIndices = new HashMap<>();
+    private final Queue<BasicBlock> tasks = new ArrayDeque<>();
     private final Map<BasicBlock, SemanticState> inStates = new HashMap<>();
 
     public SemanticAnalyzer(BuildModule module, BuildFunction function) {
         this.module = module;
         this.function = function;
+        this.entryBlock = function.blocks.getFirst();
     }
 
     public void analyze() throws CompilerError {
@@ -41,22 +44,47 @@ public class SemanticAnalyzer {
     }
 
     private void doConvergencePhase() throws CompilerError {
-        Queue<BasicBlock> tasks = new ArrayDeque<>();
-        tasks.add(function.blocks.getFirst());
-
-        inStates.put(function.blocks.getFirst(), getInitialState());
+        tasks.add(entryBlock);
+        inStates.put(entryBlock, getInitialState());
 
         while (!tasks.isEmpty()) {
             BasicBlock block = tasks.remove();
             SemanticState inState = inStates.get(block);
             SemanticState outState = analyzeBlock(block, inState);
+
+            switch (block.getTerminator()) {
+                case Jump jump -> {
+                    joinState(jump.out, outState);
+                }
+
+                case Branch branch -> {
+                    joinState(branch.thenOut, outState);
+                    joinState(branch.elseOut, outState);
+                }
+
+                case Return _, Halt _ -> {}
+
+                default -> throw new RuntimeException();
+            }
+        }
+    }
+
+    private void joinState(BasicBlock block, SemanticState newInState) {
+        SemanticState inState = inStates.get(block);
+        if (inState == null) {
+            inStates.put(block, newInState);
+            tasks.add(block);
+        } else {
+            if (inState.join(newInState)) {
+                tasks.add(block);
+            }
         }
     }
 
     private void doFinalPhase() throws CompilerError {
         transfer.enableFinalPhase();
-        SemanticState inState = inStates.get(function.blocks.getFirst());
-        analyzeBlock(function.blocks.getFirst(), inState);
+        SemanticState inState = inStates.get(entryBlock);
+        analyzeBlock(entryBlock, inState);
     }
 
     private void addLocalMapping(VariableSymbol symbol) {
@@ -109,6 +137,24 @@ public class SemanticAnalyzer {
             List<Type> stack = new ArrayList<>(this.stack);
             Type[] locals = this.locals.clone();
             return new SemanticState(stack, locals);
+        }
+
+        // Joins OTHER into THIS, returns true if modified
+        public boolean join(SemanticState other) {
+            assert stack.size() == other.stack.size();
+
+            boolean modified = false;
+            for (int i = 0; i < stack.size(); i++) {
+                if (stack.get(i) != other.stack.get(i)) {
+                    throw new UnsupportedOperationException();
+                }
+            }
+            for (int i = 0; i < locals.length; i++) {
+                if (locals[i] != other.locals[i]) {
+                    throw new UnsupportedOperationException();
+                }
+            }
+            return modified;
         }
 
         public void dump() {
@@ -186,6 +232,18 @@ public class SemanticAnalyzer {
             Type right = state.stack.removeLast();
             Type left = state.stack.removeLast();
             state.stack.add(context.BOOL);
+            return null;
+        }
+
+        @Override
+        public Void visit(Jump instruction) throws CompilerError {
+            return null;
+        }
+
+        @Override
+        public Void visit(Branch instruction) throws CompilerError {
+            Type condition = state.stack.removeLast();
+            checkType(context.BOOL, condition, instruction);
             return null;
         }
 

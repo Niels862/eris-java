@@ -3,10 +3,10 @@ package eris.compiler.ir;
 import eris.compiler.CompilerError;
 
 public class Jump extends TerminatorInstruction {
-    public final BasicBlock jump;
+    public final BasicBlock out;
 
-    public Jump(BasicBlock jump) {
-        this.jump = jump;
+    public Jump(BasicBlock out) {
+        this.out = out;
     }
 
     @Override
@@ -16,6 +16,6 @@ public class Jump extends TerminatorInstruction {
 
     @Override
     public String toString() {
-        return "JUMP " + jump;
+        return "JUMP " + out;
     }
 }
