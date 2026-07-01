@@ -1,8 +1,4 @@
 func main() -> int {
-    if true {
-        return 4;
-    } else {
-        return 6;
-    }
-    return 0;
+    var x = 5;
+    return x;
 }

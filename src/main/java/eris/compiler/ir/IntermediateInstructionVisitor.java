@@ -28,6 +28,10 @@ public abstract class IntermediateInstructionVisitor<T> {
         return defaultHandler(instruction);
     }
 
+    public T visit(Convert instruction) throws CompilerError {
+        return defaultHandler(instruction);
+    }
+
     public T visit(Branch instruction) throws CompilerError {
         return defaultHandler(instruction);
     }
@@ -45,6 +49,10 @@ public abstract class IntermediateInstructionVisitor<T> {
     }
 
     public T visit(Halt instruction) throws CompilerError {
+        return defaultHandler(instruction);
+    }
+
+    public T visit(Fallthrough instruction) throws CompilerError {
         return defaultHandler(instruction);
     }
 }

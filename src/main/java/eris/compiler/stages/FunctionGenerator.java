@@ -21,6 +21,8 @@ public class FunctionGenerator {
 
     private final List<Instruction> code = new ArrayList<>();
 
+    private BasicBlock nextBlock;
+
     public FunctionGenerator(BuildFunction function, ConstantManager constants) {
         this.function = function;
         this.constants = constants;
@@ -35,12 +37,15 @@ public class FunctionGenerator {
             local.setSlotIndex(slotIndex++);
         }
 
+        // First BLOCK is entry block. Last BLOCK is exit block which should not be referenced after semantic analysis
+        List<BasicBlock> blocks = function.blocks;
         Map<Integer, Integer> blockOffsets = new HashMap<>();
 
         InstructionEmitter emitter = new InstructionEmitter();
-        for (int i = 0; i < function.blocks.size(); i++) {
-            BasicBlock block = function.blocks.get(i);
+        for (int i = 0; i < blocks.size() - 1; i++) {
+            BasicBlock block = blocks.get(i);
             blockOffsets.put(block.id, code.size());
+            nextBlock = blocks.get(i + 1);
 
             for (IntermediateInstruction instruction : block.instructions) {
                 emitter.emit(instruction);
@@ -127,15 +132,30 @@ public class FunctionGenerator {
         }
 
         @Override
+        public Void visit(Convert instruction) {
+            assert instruction.toType == null || instruction.fromType == instruction.toType
+                    : String.format("Conflict: %s : %s", instruction.fromType, instruction.toType);
+            return null;
+        }
+
+        @Override
         public Void visit(Jump instruction) {
-            emit(OpCode.JUMP, instruction.out.id);
+            if (instruction.out != nextBlock) {
+                emit(OpCode.JUMP, instruction.out.id);
+            }
             return null;
         }
 
         @Override
         public Void visit(Branch instruction) {
-            emit(OpCode.BRANCH_IF_TRUE, instruction.thenOut.id);
-            emit(OpCode.JUMP, instruction.elseOut.id);
+            if (instruction.thenOut == nextBlock) {
+                emit(OpCode.BRANCH_IF_FALSE, instruction.elseOut.id);
+            } else {
+                emit(OpCode.BRANCH_IF_TRUE, instruction.thenOut.id);
+                if (instruction.elseOut != nextBlock) {
+                    emit(OpCode.JUMP, instruction.elseOut.id);
+                }
+            }
             return null;
         }
 

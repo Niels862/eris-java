@@ -41,7 +41,6 @@ public class VariableSymbol extends Symbol {
     }
 
     public void setInferredType(Type inferredType) {
-        assert this.inferredType == null;
         this.inferredType = inferredType;
     }
 

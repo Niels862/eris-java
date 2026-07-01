@@ -17,7 +17,6 @@ public class SemanticAnalyzer {
 
     private final TransferFunctionVisitor transfer = new TransferFunctionVisitor();
     private final TypeContext context = TypeContext.instance;
-    private final ContextStringVisitor contextBuilder = new ContextStringVisitor();
     private final Map<VariableSymbol, Integer> localValueIndices = new HashMap<>();
     private final Queue<BasicBlock> tasks = new ArrayDeque<>();
     private final Map<BasicBlock, SemanticState> inStates = new HashMap<>();
@@ -207,16 +206,16 @@ public class SemanticAnalyzer {
         @Override
         public Void visit(StoreLocal instruction) throws CompilerError {
             Type valueType = state.stack.removeLast();
+
             VariableSymbol symbol = instruction.symbol;
-            if (instruction.symbol.type != null) {
-                checkType(symbol.type, valueType, instruction);
-            } else if (finalPhase) {
-                if (instruction.isInitializingAssignment) {
-                    symbol.setInferredType(valueType);
-                } else {
-                    checkType(symbol.getInferredType(), valueType, instruction);
-                }
+            if (instruction.isInitializingAssignment) {
+                symbol.setInferredType(valueType);
             }
+
+            if (symbol.type != null) {
+                assert valueType == symbol.type;
+            } else assert !finalPhase || valueType == symbol.getInferredType();
+
             state.setLocal(symbol, valueType);
             return null;
         }
@@ -236,6 +235,21 @@ public class SemanticAnalyzer {
         }
 
         @Override
+        public Void visit(Convert instruction) throws CompilerError {
+            instruction.fromType = state.stack.removeLast();
+            if (instruction.toType == null) {
+                state.stack.add(instruction.fromType);
+            } else {
+                if (!isAssignable(instruction.toType, instruction.fromType)) {
+                    String err = String.format("%s is not assignable to %s", instruction.fromType, instruction.toType);
+                    throw instruction.error(module, err);
+                }
+                state.stack.add(instruction.toType);
+            }
+            return null;
+        }
+
+        @Override
         public Void visit(Jump instruction) throws CompilerError {
             return null;
         }
@@ -243,7 +257,7 @@ public class SemanticAnalyzer {
         @Override
         public Void visit(Branch instruction) throws CompilerError {
             Type condition = state.stack.removeLast();
-            checkType(context.BOOL, condition, instruction);
+            assert condition == context.BOOL;
             return null;
         }
 
@@ -251,7 +265,7 @@ public class SemanticAnalyzer {
         public Void visit(Call instruction) throws CompilerError {
             for (Type parameterType : instruction.function.type.parameterTypes.reversed()) {
                 Type argumentType = state.stack.removeLast();
-                checkType(parameterType, argumentType, instruction);
+                assert parameterType == argumentType;
             }
             state.stack.add(instruction.function.type.returnType);
             return null;
@@ -260,56 +274,22 @@ public class SemanticAnalyzer {
         @Override
         public Void visit(Return instruction) throws CompilerError {
             Type returnValueType = state.stack.removeLast();
-            checkType(function.symbol.type.returnType, returnValueType, instruction);
+            assert function.symbol.type.returnType == returnValueType;
             return null;
         }
 
         @Override
-        public Void visit(Halt instruction) throws CompilerError {
+        public Void visit(Halt instruction) {
             return null;
         }
 
-        private void checkType(
-                Type target, Type value,
-                IntermediateInstruction instruction) throws CompilerError {
-            if (!isAssignable(target, value)) {
-                String contextString = contextBuilder.getContextString(instruction);
-                StringBuilder sb = new StringBuilder();
-                if (contextString != null) {
-                    sb.append(contextString).append(": ");
-                }
-                sb.append(String.format("Cannot assign value of type %s to value of type %s", value, target));
-                throw instruction.error(module, sb.toString());
-            }
+        @Override
+        public Void visit(Fallthrough instruction) throws CompilerError {
+            throw instruction.error(module, "Missing return statement in function " + function.symbol.name);
         }
 
         public void enableFinalPhase() {
             this.finalPhase = true;
-        }
-    }
-
-    private class ContextStringVisitor extends IntermediateInstructionVisitor<String> {
-        public String getContextString(IntermediateInstruction instruction) {
-            try {
-                return instruction.accept(this);
-            } catch (CompilerError e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        @Override
-        public String defaultHandler(IntermediateInstruction instruction) throws CompilerError {
-            return null;
-        }
-
-        @Override
-        public String visit(Call instruction) {
-            return String.format("In call to %s", instruction.function.name);
-        }
-
-        @Override
-        public String visit(Return instruction) {
-            return String.format("In return from %s", function.symbol.name);
         }
     }
 }
