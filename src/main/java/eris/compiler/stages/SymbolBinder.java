@@ -51,7 +51,7 @@ public class SymbolBinder extends NodeVisitor<Void> {
         List<Type> parameterTypes = new ArrayList<Type>();
         for (ParameterNode parameter : node.parameters) {
             parameter.accept(this);
-            parameterTypes.add(parameter.symbol.type);
+            parameterTypes.add(parameter.symbol.staticType);
         }
 
         for (StatementNode statement : node.statements) {

@@ -133,7 +133,8 @@ public class FunctionGenerator {
 
         @Override
         public Void visit(Convert instruction) {
-            assert instruction.toType == null || instruction.fromType == instruction.toType
+            assert instruction.toType != null;
+            assert instruction.fromType == instruction.toType
                     : String.format("Conflict: %s : %s", instruction.fromType, instruction.toType);
             return null;
         }

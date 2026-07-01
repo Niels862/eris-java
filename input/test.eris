@@ -1,4 +1,14 @@
+func is_7(x: int) -> bool {
+    if x === 7 {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 func main() -> int {
-    var x = 5;
-    return x;
+    if is_7(7) {
+        return 42;
+    }
+    return 69;
 }

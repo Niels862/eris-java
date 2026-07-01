@@ -7,9 +7,12 @@ public class StoreLocal extends IntermediateInstruction {
     public final VariableSymbol symbol;
     public final boolean isInitializingAssignment;
 
-    public StoreLocal(VariableSymbol symbol, boolean isInitializingAssignment) {
+    public Convert converter;
+
+    public StoreLocal(VariableSymbol symbol, boolean isInitializingAssignment, Convert converter) {
         this.symbol = symbol;
         this.isInitializingAssignment = isInitializingAssignment;
+        this.converter = converter;
     }
 
     public <T> T accept(IntermediateInstructionVisitor<T> visitor) throws CompilerError {

@@ -139,7 +139,7 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         }
     }
 
-    public void emit(IntermediateInstruction instruction) {
+    public <T extends IntermediateInstruction> T emit(T instruction) {
         if (block.getLast() instanceof TerminatorInstruction) {
             addBlock(makeBlock());
         }
@@ -148,6 +148,8 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         if (currentNode != null) {
             instruction.setPosition(currentNode.line, currentNode.column);
         }
+
+        return instruction;
     }
 
     public void addBlock(BasicBlock block) {
@@ -183,8 +185,8 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         public Void visit(VariableNode node) throws CompilerError {
             if (node.initialValue != null) {
                 expressionGenerator.generate(node.initialValue);
-                emit(new Convert(node.symbol.type));
-                emit(new StoreLocal(node.symbol, true));
+                Convert converter = emit(new Convert(node.symbol.staticType));
+                emit(new StoreLocal(node.symbol, true, converter));
             }
             node.symbol.setDeclared();
             locals.add(node.symbol);
@@ -194,7 +196,8 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         @Override
         public Void visit(AssignmentStatementNode node) throws CompilerError {
             expressionGenerator.generate(node.value);
-            assignmentTargetGenerator.generate(node.target);
+            Convert converter = emit(new Convert(null));
+            assignmentTargetGenerator.withConverter(converter).generate(node.target);
             return null;
         }
 
@@ -306,6 +309,13 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
     }
 
     private class AssignmentTargetGenerator extends Generator {
+        private Convert converter;
+
+        AssignmentTargetGenerator withConverter(Convert converter) {
+            this.converter = converter;
+            return this;
+        }
+
         @Override
         public Void defaultHandler(Node node) throws CompilerError {
             throw new CompilerError(module, node.line, node.column, "Invalid assignment target");
@@ -314,7 +324,7 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         @Override
         public Void visit(IdentifierNode node) throws CompilerError {
             VariableSymbol symbol = lookupVariableSymbol(node, node.name);
-            emit(new StoreLocal(symbol, false));
+            emit(new StoreLocal(symbol, false, converter));
             return null;
         }
     }

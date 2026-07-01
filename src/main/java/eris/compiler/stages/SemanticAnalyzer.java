@@ -16,6 +16,8 @@ public class SemanticAnalyzer {
     private final BasicBlock entryBlock;
 
     private final TransferFunctionVisitor transfer = new TransferFunctionVisitor();
+    private final TypePatcherVisitor patcher = new TypePatcherVisitor();
+
     private final TypeContext context = TypeContext.instance;
     private final Map<VariableSymbol, Integer> localValueIndices = new HashMap<>();
     private final Queue<BasicBlock> tasks = new ArrayDeque<>();
@@ -30,6 +32,7 @@ public class SemanticAnalyzer {
     public void analyze() throws CompilerError {
         setupLocalVariables();
         doConvergencePhase();
+        patchInferredInformation();
         doFinalPhase();
     }
 
@@ -40,6 +43,10 @@ public class SemanticAnalyzer {
         for (VariableSymbol symbol : function.locals) {
             addLocalMapping(symbol);
         }
+    }
+
+    private void addLocalMapping(VariableSymbol symbol) {
+        localValueIndices.put(symbol, localValueIndices.size());
     }
 
     private void doConvergencePhase() throws CompilerError {
@@ -80,14 +87,18 @@ public class SemanticAnalyzer {
         }
     }
 
+    private void patchInferredInformation() throws CompilerError {
+        for (BasicBlock block : function.blocks) {
+            for (IntermediateInstruction instruction : block.instructions) {
+                instruction.accept(patcher);
+            }
+        }
+    }
+
     private void doFinalPhase() throws CompilerError {
         transfer.enableFinalPhase();
         SemanticState inState = inStates.get(entryBlock);
         analyzeBlock(entryBlock, inState);
-    }
-
-    private void addLocalMapping(VariableSymbol symbol) {
-        localValueIndices.put(symbol, localValueIndices.size());
     }
 
     private SemanticState analyzeBlock(BasicBlock block, SemanticState inState) throws CompilerError {
@@ -104,7 +115,7 @@ public class SemanticAnalyzer {
         Type[] locals = new Type[localValueIndices.size()];
         for (VariableSymbol parameter : function.parameters) {
             int index = localValueIndices.get(parameter);
-            locals[index] = parameter.type;
+            locals[index] = parameter.staticType;
         }
         return new SemanticState(Collections.emptyList(), locals);
     }
@@ -209,12 +220,12 @@ public class SemanticAnalyzer {
 
             VariableSymbol symbol = instruction.symbol;
             if (instruction.isInitializingAssignment) {
-                symbol.setInferredType(valueType);
+                symbol.setType(symbol.staticType != null ? symbol.staticType : valueType);
             }
 
-            if (symbol.type != null) {
-                assert valueType == symbol.type;
-            } else assert !finalPhase || valueType == symbol.getInferredType();
+            if (symbol.staticType != null) {
+                assert valueType == symbol.staticType;
+            } else assert !finalPhase || valueType == symbol.getType();
 
             state.setLocal(symbol, valueType);
             return null;
@@ -290,6 +301,20 @@ public class SemanticAnalyzer {
 
         public void enableFinalPhase() {
             this.finalPhase = true;
+        }
+    }
+
+    private class TypePatcherVisitor extends IntermediateInstructionVisitor<Void> {
+        @Override
+        public Void defaultHandler(IntermediateInstruction instruction) throws CompilerError {
+            return null;
+        }
+
+        @Override
+        public Void visit(StoreLocal instruction) throws CompilerError {
+            VariableSymbol symbol = instruction.symbol;
+            instruction.converter.toType = symbol.staticType != null ? symbol.staticType : symbol.getType();
+            return null;
         }
     }
 }
