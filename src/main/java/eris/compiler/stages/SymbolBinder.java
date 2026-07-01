@@ -113,6 +113,38 @@ public class SymbolBinder extends NodeVisitor<Void> {
     }
 
     @Override
+    public Void visit(WhileStatementNode node) throws CompilerError {
+        node.scope = scopeHandler.enterNewScope();
+        node.condition.accept(this);
+        for (StatementNode statement : node.body) {
+            statement.accept(this);
+        }
+        scopeHandler.leaveScope(node.scope);
+        return null;
+    }
+
+    @Override
+    public Void visit(DoWhileStatementNode node) throws CompilerError {
+        node.scope = scopeHandler.enterNewScope();
+        for (StatementNode statement : node.body) {
+            statement.accept(this);
+        }
+        node.condition.accept(this);
+        scopeHandler.leaveScope(node.scope);
+        return null;
+    }
+
+    @Override
+    public Void visit(LoopStatementNode node) throws CompilerError {
+        node.scope = scopeHandler.enterNewScope();
+        for (StatementNode statement : node.body) {
+            statement.accept(this);
+        }
+        scopeHandler.leaveScope(node.scope);
+        return null;
+    }
+
+    @Override
     public Void visit(ExpressionStatementNode node) throws CompilerError {
         node.expression.accept(this);
         return null;

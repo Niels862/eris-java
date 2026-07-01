@@ -1,5 +1,7 @@
 package eris.module.constant;
 
+import org.apache.commons.text.StringEscapeUtils;
+
 public class StringConstant extends Constant {
     public final String value;
 
@@ -8,6 +10,6 @@ public class StringConstant extends Constant {
     }
 
     public String toString() {
-        return value;
+        return "'" + StringEscapeUtils.escapeJava(value) + "'";
     }
 }

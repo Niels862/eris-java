@@ -11,6 +11,6 @@ public class FunctionReferenceConstant extends Constant {
 
     @Override
     public String toString() {
-        return "Function " + module.name + "::" + name;
+        return "Function " + module.name.value + "::" + name.value;
     }
 }

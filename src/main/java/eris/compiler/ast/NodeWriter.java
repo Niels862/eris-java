@@ -55,10 +55,29 @@ public class NodeWriter extends NodeVisitor<Void> {
     @Override
     public Void visit(IfElseStatementNode node) throws CompilerError {
         write("condition", node.condition);
-        write("trueBranch", node.thenBody);
-        write("falseBranch", node.elseBody);
+        write("thenBody", node.thenBody);
+        write("elseBody", node.elseBody);
         return null;
+    }
 
+    @Override
+    public Void visit(WhileStatementNode node) throws CompilerError {
+        write("condition", node.condition);
+        write("body", node.body);
+        return null;
+    }
+
+    @Override
+    public Void visit(DoWhileStatementNode node) throws CompilerError {
+        write("condition", node.condition);
+        write("body", node.body);
+        return null;
+    }
+
+    @Override
+    public Void visit(LoopStatementNode node) throws CompilerError {
+        write("body", node.body);
+        return null;
     }
 
     public Void visit(ExpressionStatementNode node) throws CompilerError {

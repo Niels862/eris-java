@@ -161,7 +161,7 @@ public class SemanticAnalyzer {
             }
             for (int i = 0; i < locals.length; i++) {
                 if (locals[i] != other.locals[i]) {
-                    throw new UnsupportedOperationException();
+                    throw new UnsupportedOperationException(String.format("%s : %s", locals[i], other.locals[i]));
                 }
             }
             return modified;

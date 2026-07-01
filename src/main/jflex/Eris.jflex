@@ -33,6 +33,10 @@ InvalidIntegerLiteral = -? [0-9][A-Za-z0-9_]*
   "return"                  { return token(TokenKind.RETURN); }
   "if"                      { return token(TokenKind.IF); }
   "else"                    { return token(TokenKind.ELSE); }
+  "while"                   { return token(TokenKind.WHILE); }
+  "do"                      { return token(TokenKind.DO); }
+  "loop"                    { return token(TokenKind.LOOP); }
+  "for"                     { return token(TokenKind.FOR); }
   "var"                     { return token(TokenKind.VAR); }
   "true"                    { return token(TokenKind.TRUE); }
   "false"                   { return token(TokenKind.FALSE); }

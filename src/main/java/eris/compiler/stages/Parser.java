@@ -78,6 +78,15 @@ public class Parser {
         if (matches(TokenKind.IF)) {
             return parseIfElseStatement();
         }
+        if (matches(TokenKind.WHILE)) {
+            return parseWhileStatement();
+        }
+        if (matches(TokenKind.DO)) {
+            return parseDoWhileStatement();
+        }
+        if (matches(TokenKind.LOOP)) {
+            return parseLoopStatement();
+        }
         if (matches(TokenKind.RETURN)) {
             return parseReturnStatement();
         }
@@ -120,6 +129,28 @@ public class Parser {
         }
 
         return new IfElseStatementNode(token, condition, trueBranch, falseBranch);
+    }
+
+    private WhileStatementNode parseWhileStatement() throws CompilerError {
+        Token token = expect(TokenKind.WHILE);
+        ExpressionNode condition = parseExpression();
+        List<StatementNode> body = parseStatementBlock();
+        return new WhileStatementNode(token, condition, body);
+    }
+
+    private DoWhileStatementNode parseDoWhileStatement() throws CompilerError {
+        Token token = expect(TokenKind.DO);
+        List<StatementNode> body = parseStatementBlock();
+        expect(TokenKind.WHILE);
+        ExpressionNode condition = parseExpression();
+        expect(TokenKind.SEMICOLON);
+        return new DoWhileStatementNode(token, body, condition);
+    }
+
+    private LoopStatementNode parseLoopStatement() throws CompilerError {
+        Token token = expect(TokenKind.LOOP);
+        List<StatementNode> body = parseStatementBlock();
+        return new LoopStatementNode(token, body);
     }
 
     private ReturnStatementNode parseReturnStatement() throws CompilerError {

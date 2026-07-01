@@ -125,6 +125,9 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
 
     public VariableSymbol lookupVariableSymbol(Node node, String name) throws CompilerError {
         Symbol symbol = scopeHandler.getSymbolTable().lookup(name);
+
+        System.out.println(symbol + " " + name + " " + scopeHandler.getSymbolTable());
+
         if (symbol instanceof VariableSymbol variableSymbol) {
             if (!variableSymbol.isDeclared()) {
                 throw new CompilerError(
@@ -203,6 +206,7 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
 
         @Override
         public Void visit(IfElseStatementNode node) throws CompilerError {
+            scopeHandler.enterScope(node.thenScope);
             expressionGenerator.generate(node.condition);
             emit(new Convert(context.BOOL));
 
@@ -217,12 +221,69 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
             }
             emit(new Jump(exitBlock));
 
+            scopeHandler.leaveScope(node.thenScope);
+            scopeHandler.enterScope(node.elseScope);
+
             addBlock(elseBlock);
             for (StatementNode statement : node.elseBody) {
                 statementGenerator.generate(statement);
             }
             addBlock(exitBlock);
+
+            scopeHandler.leaveScope(node.elseScope);
             return null;
+        }
+
+        @Override
+        public Void visit(WhileStatementNode node) throws CompilerError {
+            emitConditionalLoop(node.scope, node.condition, node.body, false);
+            return null;
+        }
+
+        @Override
+        public Void visit(DoWhileStatementNode node) throws CompilerError {
+            emitConditionalLoop(node.scope, node.condition, node.body, true);
+            return null;
+        }
+
+        @Override
+        public Void visit(LoopStatementNode node) throws CompilerError {
+            emitConditionalLoop(node.scope, null, node.body, false);
+            return null;
+        }
+
+        private void emitConditionalLoop(
+                SymbolTable scope,
+                ExpressionNode condition,
+                List<StatementNode> body,
+                boolean isDoWhile) throws CompilerError {
+            scopeHandler.enterScope(scope);
+
+            BasicBlock loopBlock = makeBlock();
+            BasicBlock nextBlock = makeBlock();
+            BasicBlock exitBlock = makeBlock();
+
+            if (!isDoWhile) {
+                emit(new Jump(nextBlock));
+            }
+
+            addBlock(loopBlock);
+            for (StatementNode statement : body) {
+                statementGenerator.generate(statement);
+            }
+
+            addBlock(nextBlock);
+            if (condition != null) {
+                expressionGenerator.generate(condition);
+                emit(new Convert(context.BOOL));
+                emit(new Branch(loopBlock, exitBlock));
+            } else {
+                emit(new Jump(loopBlock));
+            }
+
+            addBlock(exitBlock);
+
+            scopeHandler.leaveScope(scope);
         }
 
         @Override

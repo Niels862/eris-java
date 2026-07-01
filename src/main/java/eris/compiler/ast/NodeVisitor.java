@@ -32,6 +32,18 @@ public abstract class NodeVisitor<T> {
         return defaultHandler(node);
     }
 
+    public T visit(WhileStatementNode node) throws CompilerError {
+        return defaultHandler(node);
+    }
+
+    public T visit(DoWhileStatementNode node) throws CompilerError {
+        return defaultHandler(node);
+    }
+
+    public T visit(LoopStatementNode node) throws CompilerError {
+        return defaultHandler(node);
+    }
+
     public T visit(ExpressionStatementNode node) throws CompilerError {
         return defaultHandler(node);
     }
