@@ -4,6 +4,7 @@ import eris.compiler.symbol.ClassSymbol;
 import eris.compiler.symbol.Symbol;
 import eris.compiler.symbol.SymbolTable;
 import eris.compiler.type.ClassType;
+import eris.compiler.type.NullableType;
 
 public class TypeContext {
     public final ClassSymbol INT_SYMBOL = makeNativeClassSymbol("int");
@@ -14,6 +15,8 @@ public class TypeContext {
 
     public final ClassSymbol STRING_SYMBOL = makeNativeClassSymbol("string");
     public final ClassType STRING = STRING_SYMBOL.valueType;
+
+    public final NullableType NULL = new NullableType(null);
 
     public final SymbolTable symbolTable = new SymbolTable(new Symbol[]{
             INT_SYMBOL,

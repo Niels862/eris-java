@@ -12,10 +12,13 @@ public enum TokenKind {
     SEMICOLON(";"),
     COLON(":"),
     EQ("="),
-    EQEQ("=="),
-    NEQ("!="),
-    EQEQEQ("==="),
-    NEQEQ("!=="),
+    QMARK("?"),
+    EMARK("!"),
+
+    EQ_OP("=="),
+    NE_OP("!="),
+    IDEQ_OP("==="),
+    IDNE_OP("!=="),
 
     FUNC("func"),
     RETURN("return"),
@@ -28,6 +31,7 @@ public enum TokenKind {
     VAR("var"),
     TRUE("true"),
     FALSE("false"),
+    NULL("null"),
 
     INTEGER("integer", true),
     INVALID_INTEGER("integer", true, TokenKind.INTEGER),

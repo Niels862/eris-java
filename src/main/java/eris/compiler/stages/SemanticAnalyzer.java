@@ -6,6 +6,7 @@ import eris.compiler.CompilerError;
 import eris.compiler.TypeContext;
 import eris.compiler.ir.*;
 import eris.compiler.symbol.VariableSymbol;
+import eris.compiler.type.NullableType;
 import eris.compiler.type.Type;
 
 import java.util.*;
@@ -121,7 +122,15 @@ public class SemanticAnalyzer {
     }
 
     private boolean isAssignable(Type target, Type value) {
-        return target == value;
+        if (target == value) {
+            return true;
+        }
+
+        if (target instanceof NullableType && value == context.NULL) {
+            return true;
+        }
+
+        return false;
     }
 
     private class SemanticState {
@@ -201,6 +210,12 @@ public class SemanticAnalyzer {
 
                 default -> throw new UnsupportedOperationException(instruction.constant.toString());
             }
+            return null;
+        }
+
+        @Override
+        public Void visit(LoadNull instruction) throws CompilerError {
+            state.stack.add(context.NULL);
             return null;
         }
 

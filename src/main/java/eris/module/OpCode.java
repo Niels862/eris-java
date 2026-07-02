@@ -2,12 +2,13 @@ package eris.module;
 
 public enum OpCode {
     LOAD_CONST(Format.INTEGER),
+    LOAD_NULL,
     LOAD_LOCAL(Format.INTEGER),
     STORE_LOCAL(Format.INTEGER),
     POP,
 
     EQ,
-    NEQ,
+    NE,
 
     JUMP(Format.JUMP_TARGET),
     BRANCH_IF_TRUE(Format.JUMP_TARGET),

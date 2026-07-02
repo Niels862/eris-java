@@ -6,6 +6,7 @@ import eris.compiler.TypeContext;
 import eris.compiler.ast.*;
 import eris.compiler.symbol.*;
 import eris.compiler.type.FunctionType;
+import eris.compiler.type.NullableType;
 import eris.compiler.type.Type;
 
 import java.util.ArrayList;
@@ -208,6 +209,11 @@ public class SymbolBinder extends NodeVisitor<Void> {
             } else {
                 throw new CompilerError(module, node.line, node.column, String.format("%s is not a typename", node.name));
             }
+        }
+
+        @Override
+        public Type visit(NullableTypeNode node) throws CompilerError {
+            return new NullableType(node.type.accept(this));
         }
     }
 }

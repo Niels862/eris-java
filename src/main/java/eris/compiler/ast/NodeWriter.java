@@ -131,8 +131,19 @@ public class NodeWriter extends NodeVisitor<Void> {
     }
 
     @Override
+    public Void visit(NullLiteralNode node) throws CompilerError {
+        return null;
+    }
+
+    @Override
     public Void visit(NamedTypeNode node) throws CompilerError {
         write("name", node.name);
+        return null;
+    }
+
+    @Override
+    public Void visit(NullableTypeNode node) throws CompilerError {
+        write("type", node.type);
         return null;
     }
 

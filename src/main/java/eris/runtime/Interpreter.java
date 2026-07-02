@@ -1,14 +1,11 @@
 package eris.runtime;
 
-import eris.compiler.symbol.VariableSymbol;
 import eris.module.Function;
 import eris.module.Instruction;
 import eris.module.Module;
 import eris.module.constant.Constant;
 import eris.module.constant.FunctionReferenceConstant;
 
-import eris.module.constant.IntegerConstant;
-import eris.module.constant.StringConstant;
 import eris.runtime.LoadedModule.ResolvedFunctionReference;
 
 import java.util.ArrayList;
@@ -107,6 +104,10 @@ public class Interpreter {
                 stack.add(resolvedConstants[argument]);
             }
 
+            case LOAD_NULL -> {
+                stack.add(null);
+            }
+
             case LOAD_LOCAL -> {
                 Object value = stack.get(basePointer + argument);
                 stack.add(value);
@@ -127,7 +128,7 @@ public class Interpreter {
                 stack.add(value1 == value2 ? 1 : 0);
             }
 
-            case NEQ -> {
+            case NE -> {
                 Object value1 = stack.removeLast();
                 Object value2 = stack.removeLast();
                 stack.add(value1 != value2 ? 1 : 0);

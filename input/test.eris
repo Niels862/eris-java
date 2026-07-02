@@ -1,4 +1,5 @@
 func main() -> int {
+    var s: (int?)? = null;
     var x = 5;
     do {
         x = 42;

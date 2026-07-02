@@ -5,8 +5,8 @@ import eris.compiler.CompilerError;
 import eris.compiler.Token;
 import eris.compiler.TokenKind;
 import eris.compiler.ast.*;
+import eris.compiler.type.NullableType;
 
-import java.beans.Expression;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -40,7 +40,7 @@ public class Parser {
 
         TypeNode returnType = null;
         if (accept(TokenKind.ARROW) != null) {
-            returnType = parseTypeAnnotation();
+            returnType = parseType();
         }
 
         List<StatementNode> statements = parseStatementBlock();
@@ -58,7 +58,7 @@ public class Parser {
         while (!atEnd()) {
             Token name = expect(TokenKind.IDENTIFIER);
             expect(TokenKind.COLON);
-            TypeNode type = parseTypeAnnotation();
+            TypeNode type = parseType();
 
             parameters.add(new ParameterNode(name, name.text, type));
 
@@ -99,7 +99,7 @@ public class Parser {
 
         TypeNode type = null;
         if (accept(TokenKind.COLON) != null) {
-            type = parseTypeAnnotation();
+            type = parseType();
         }
 
         ExpressionNode initialValue = null;
@@ -208,7 +208,7 @@ public class Parser {
         return parseNotAssociativeBinaryExpression(
                 this::parsePostfixExpression,
                 (kind) -> switch (kind) {
-                    case EQEQ, NEQ, EQEQEQ, NEQEQ -> true;
+                    case EQ_OP, NE_OP, IDEQ_OP, IDNE_OP -> true;
                     default -> false;
                 }
         );
@@ -241,6 +241,9 @@ public class Parser {
         }
         if (accept(TokenKind.FALSE) != null) {
             return new BooleanLiteralNode(token, false);
+        }
+        if (accept(TokenKind.NULL) != null) {
+            return new NullLiteralNode(token);
         }
         throw unexpectedTokenError(token, "expression");
     }
@@ -337,9 +340,32 @@ public class Parser {
         return node;
     }
 
-    private TypeNode parseTypeAnnotation() throws CompilerError {
-        Token name = expect(TokenKind.IDENTIFIER);
-        return new NamedTypeNode(name, name.text);
+    private TypeNode parseType() throws CompilerError {
+        TypeNode type = parseTypeAtom();
+
+        Token token = getToken();
+        if (accept(TokenKind.QMARK) != null) {
+            if (type instanceof NullableTypeNode) {
+                throw new ParserError(token, "cannot nest nullable type annotations");
+            }
+            return new NullableTypeNode(token, type);
+        }
+
+        return type;
+    }
+
+    private TypeNode parseTypeAtom() throws CompilerError {
+        Token token = getToken();
+
+        if (accept(TokenKind.LPAREN) != null) {
+            TypeNode type = parseType();
+            expect(TokenKind.RPAREN);
+            return type;
+        } else if (accept(TokenKind.IDENTIFIER) != null) {
+            return new NamedTypeNode(token, token.text);
+        }
+
+        throw unexpectedTokenError(token, "type");
     }
 
     private Token accept(TokenKind kind) {

@@ -99,6 +99,12 @@ public class FunctionGenerator {
         }
 
         @Override
+        public Void visit(LoadNull instruction) throws CompilerError {
+            emit(OpCode.LOAD_NULL);
+            return null;
+        }
+
+        @Override
         public Void visit(LoadLocal instruction) {
             emit(OpCode.LOAD_LOCAL, instruction.symbol.getSlotIndex());
             return null;
@@ -123,7 +129,7 @@ public class FunctionGenerator {
                         -> emit(OpCode.EQ);
 
                 case "!=="
-                        -> emit(OpCode.NEQ);
+                        -> emit(OpCode.NE);
 
                 default
                         -> throw new RuntimeException("Unexpected operator: " + instruction.operator);
@@ -134,8 +140,6 @@ public class FunctionGenerator {
         @Override
         public Void visit(Convert instruction) {
             assert instruction.toType != null;
-            assert instruction.fromType == instruction.toType
-                    : String.format("Conflict: %s : %s", instruction.fromType, instruction.toType);
             return null;
         }
 

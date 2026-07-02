@@ -40,9 +40,12 @@ InvalidIntegerLiteral = -? [0-9][A-Za-z0-9_]*
   "var"                     { return token(TokenKind.VAR); }
   "true"                    { return token(TokenKind.TRUE); }
   "false"                   { return token(TokenKind.FALSE); }
+  "null"                    { return token(TokenKind.NULL); }
 
-  "==="                     { return token(TokenKind.EQEQEQ); }
-  "!=="                     { return token(TokenKind.NEQEQ); }
+  "==="                     { return token(TokenKind.IDEQ_OP); }
+  "!=="                     { return token(TokenKind.IDNE_OP); }
+  "=="                      { return token(TokenKind.EQ_OP); }
+  "!="                      { return token(TokenKind.NE_OP); }
   "->"                      { return token(TokenKind.ARROW); }
   "("                       { return token(TokenKind.LPAREN); }
   ")"                       { return token(TokenKind.RPAREN); }
@@ -54,6 +57,8 @@ InvalidIntegerLiteral = -? [0-9][A-Za-z0-9_]*
   ";"                       { return token(TokenKind.SEMICOLON); }
   ":"                       { return token(TokenKind.COLON); }
   "="                       { return token(TokenKind.EQ); }
+  "?"                       { return token(TokenKind.QMARK); }
+  "!"                       { return token(TokenKind.EMARK); }
 
   {Identifier}              { return token(TokenKind.IDENTIFIER); }
   {IntegerLiteral}          { return token(TokenKind.INTEGER); }

@@ -76,7 +76,15 @@ public abstract class NodeVisitor<T> {
         return defaultHandler(node);
     }
 
+    public T visit(NullLiteralNode node) throws CompilerError {
+        return defaultHandler(node);
+    }
+
     public T visit(NamedTypeNode node) throws CompilerError {
+        return defaultHandler(node);
+    }
+
+    public T visit(NullableTypeNode node) throws CompilerError {
         return defaultHandler(node);
     }
 }

@@ -367,6 +367,12 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
             emit(new LoadConstant(node.value));
             return null;
         }
+
+        @Override
+        public Void visit(NullLiteralNode node) throws CompilerError {
+            emit(new LoadNull());
+            return null;
+        }
     }
 
     private class AssignmentTargetGenerator extends Generator {
