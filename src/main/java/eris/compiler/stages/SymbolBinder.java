@@ -194,6 +194,11 @@ public class SymbolBinder extends NodeVisitor<Void> {
         return null;
     }
 
+    @Override
+    public Void visit(NullLiteralNode node) throws CompilerError {
+        return null;
+    }
+
     private Type buildType(TypeNode node) throws CompilerError {
         Type type = node.accept(typeBuilder);
         assert type != null;

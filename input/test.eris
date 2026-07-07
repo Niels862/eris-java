@@ -1,8 +1,4 @@
 func main() -> int {
-    var s: (int?)? = null;
-    var x = 5;
-    do {
-        x = 42;
-    } while x === 3;
+    var x: int? = 5;
     return x;
 }

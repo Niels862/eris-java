@@ -392,6 +392,7 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         public Void visit(IdentifierNode node) throws CompilerError {
             VariableSymbol symbol = lookupVariableSymbol(node, node.name);
             emit(new StoreLocal(symbol, false, converter));
+            converter.toType = symbol.staticType;
             return null;
         }
     }

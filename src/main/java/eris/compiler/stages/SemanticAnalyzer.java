@@ -126,8 +126,16 @@ public class SemanticAnalyzer {
             return true;
         }
 
-        if (target instanceof NullableType && value == context.NULL) {
-            return true;
+        if (target instanceof NullableType nullableTarget) {
+            if (value == context.NULL) {
+                return true;
+            }
+
+            if (value instanceof NullableType nullableValue) {
+                return isAssignable(nullableTarget.type, nullableValue.type);
+            } else {
+                return isAssignable(nullableTarget.type, value);
+            }
         }
 
         return false;
@@ -192,7 +200,7 @@ public class SemanticAnalyzer {
             this.state = state;
             instruction.accept(this);
 
-            System.out.printf("State after %s:%n", instruction);
+            System.out.printf("State after %s:\n", instruction);
             state.dump();
         }
 
@@ -234,13 +242,16 @@ public class SemanticAnalyzer {
             Type valueType = state.stack.removeLast();
 
             VariableSymbol symbol = instruction.symbol;
+            Type type = symbol.staticType != null ? symbol.staticType : valueType;
             if (instruction.isInitializingAssignment) {
-                symbol.setType(symbol.staticType != null ? symbol.staticType : valueType);
+                symbol.setType(type);
             }
 
-            if (symbol.staticType != null) {
-                assert valueType == symbol.staticType;
-            } else assert !finalPhase || valueType == symbol.getType();
+            if (!isAssignable(type, valueType)) {
+                String err = String.format("Cannot assign `%s` value to %s of type `%s`",
+                        valueType, symbol.name, type);
+                throw instruction.error(module, err);
+            }
 
             state.setLocal(symbol, valueType);
             return null;
@@ -253,7 +264,7 @@ public class SemanticAnalyzer {
         }
 
         @Override
-        public Void visit(BinaryOperation instruction) throws CompilerError {
+        public Void visit(BinaryOperation instruction) {
             Type right = state.stack.removeLast();
             Type left = state.stack.removeLast();
             state.stack.add(context.BOOL);
@@ -261,29 +272,21 @@ public class SemanticAnalyzer {
         }
 
         @Override
-        public Void visit(Convert instruction) throws CompilerError {
-            instruction.fromType = state.stack.removeLast();
-            if (instruction.toType == null) {
-                state.stack.add(instruction.fromType);
-            } else {
-                if (!isAssignable(instruction.toType, instruction.fromType)) {
-                    String err = String.format("%s is not assignable to %s", instruction.fromType, instruction.toType);
-                    throw instruction.error(module, err);
-                }
-                state.stack.add(instruction.toType);
-            }
+        public Void visit(Convert instruction) {
             return null;
         }
 
         @Override
-        public Void visit(Jump instruction) throws CompilerError {
+        public Void visit(Jump instruction) {
             return null;
         }
 
         @Override
         public Void visit(Branch instruction) throws CompilerError {
             Type condition = state.stack.removeLast();
-            assert condition == context.BOOL;
+            if (!isAssignable(context.BOOL, condition)) {
+                throw instruction.error(module, String.format("cannot use `%s` value as condition", condition));
+            }
             return null;
         }
 
@@ -291,7 +294,12 @@ public class SemanticAnalyzer {
         public Void visit(Call instruction) throws CompilerError {
             for (Type parameterType : instruction.function.type.parameterTypes.reversed()) {
                 Type argumentType = state.stack.removeLast();
-                assert parameterType == argumentType;
+
+                if (!isAssignable(argumentType, parameterType)) {
+                    String err = String.format("Cannot use `%s` value as argument %s of type `%s`",
+                            parameterType, argumentType, "(placeholder)");
+                    throw instruction.error(module, err);
+                }
             }
             state.stack.add(instruction.function.type.returnType);
             return null;
@@ -300,7 +308,12 @@ public class SemanticAnalyzer {
         @Override
         public Void visit(Return instruction) throws CompilerError {
             Type returnValueType = state.stack.removeLast();
-            assert function.symbol.type.returnType == returnValueType;
+            if (!isAssignable(function.symbol.type.returnType, returnValueType)) {
+                String err = String.format("Cannot use `%s` value as return from %s of type `%s`",
+                        returnValueType, function.symbol.name, function.symbol.type.returnType);
+                throw instruction.error(module, err);
+            }
+
             return null;
         }
 
@@ -319,7 +332,7 @@ public class SemanticAnalyzer {
         }
     }
 
-    private class TypePatcherVisitor extends IntermediateInstructionVisitor<Void> {
+    private static class TypePatcherVisitor extends IntermediateInstructionVisitor<Void> {
         @Override
         public Void defaultHandler(IntermediateInstruction instruction) throws CompilerError {
             return null;
