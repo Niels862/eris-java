@@ -23,14 +23,28 @@ public class Parser {
 
     public ModuleNode parse() throws CompilerError {
         Token token = getToken();
+        List<ClassNode> classes = new ArrayList<>();
         List<FunctionNode> functions = new ArrayList<>();
 
         while (!atEnd()) {
-            FunctionNode function = parseFunction();
-            functions.add(function);
+            switch (getToken().kind) {
+                case CLASS -> classes.add(parseClass());
+                case FUNC -> functions.add(parseFunction());
+                default -> throw unexpectedTokenError(getToken(), "statement or declaration");
+            }
         }
 
-        return new ModuleNode(token, functions);
+        return new ModuleNode(token, classes, functions);
+    }
+
+    private ClassNode parseClass() throws CompilerError {
+        expect(TokenKind.CLASS);
+        Token name = expect(TokenKind.IDENTIFIER);
+
+        expect(TokenKind.LBRACE);
+        expect(TokenKind.RBRACE);
+
+        return new ClassNode(name, name.text);
     }
 
     private FunctionNode parseFunction() throws CompilerError {

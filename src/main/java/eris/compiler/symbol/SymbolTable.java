@@ -7,6 +7,10 @@ public class SymbolTable {
     private final Map<String, Symbol> symbols = new HashMap<>();
     private final SymbolTable parent;
 
+    public SymbolTable() {
+        this.parent = null;
+    }
+
     public SymbolTable(SymbolTable parent) {
         this.parent = parent;
     }
@@ -35,6 +39,10 @@ public class SymbolTable {
         assert !defines(name);
         assert !(lookup(name) instanceof TypeSymbol);
         symbols.put(name, symbol);
+    }
+
+    public Map<String, Symbol> getSymbols() {
+        return symbols;
     }
 
     public String toString() {

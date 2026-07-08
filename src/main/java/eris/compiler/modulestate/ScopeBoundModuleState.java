@@ -13,8 +13,8 @@ public class ScopeBoundModuleState extends ModuleState {
     }
 
     public static ScopeBoundModuleState build(BuildModule module, ParsedModuleState state) throws CompilerError {
-        ModuleNode moduleNode = state.getModuleNode();
-        SymbolBinder symbolBinder = new SymbolBinder(module, moduleNode);
+        ModuleNode moduleNode = state.moduleNode;
+        SymbolBinder symbolBinder = new SymbolBinder(module, moduleNode, state.definitions);
         symbolBinder.bindSymbols();
         return new ScopeBoundModuleState(moduleNode);
     }

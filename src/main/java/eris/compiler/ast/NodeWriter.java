@@ -19,7 +19,14 @@ public class NodeWriter extends NodeVisitor<Void> {
 
     @Override
     public Void visit(ModuleNode node) throws CompilerError {
+        write("classes", node.classes);
         write("functions", node.functions);
+        return null;
+    }
+
+    @Override
+    public Void visit(ClassNode node) throws CompilerError {
+        write("name", node.name);
         return null;
     }
 
@@ -114,19 +121,19 @@ public class NodeWriter extends NodeVisitor<Void> {
 
     @Override
     public Void visit(IntegerLiteralNode node) {
-        write("value", Integer.toString(node.value));
+        write("value", node.value);
         return null;
     }
 
     @Override
     public Void visit(BooleanLiteralNode node) {
-        write("value", Boolean.toString(node.value));
+        write("value", node.value);
         return null;
     }
 
     @Override
     public Void visit(StringLiteralNode node) {
-        write("value", StringEscapeUtils.escapeJava(node.value));
+        write("value", node.value);
         return null;
     }
 
@@ -152,8 +159,12 @@ public class NodeWriter extends NodeVisitor<Void> {
         System.out.println(string);
     }
 
+    private void write(String key, Object value) {
+        write(key + ": " + value.toString());
+    }
+
     private void write(String key, String value) {
-        write(key + ": " + value);
+        write(key + ": '" + StringEscapeUtils.escapeJava(value) + "'");
     }
 
     private <T extends Node> void write(String key, List<T> nodes) throws CompilerError {

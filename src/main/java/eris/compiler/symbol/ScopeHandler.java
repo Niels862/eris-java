@@ -2,6 +2,7 @@ package eris.compiler.symbol;
 
 import eris.compiler.CompilerError;
 
+import java.util.Map;
 import java.util.Stack;
 
 public class ScopeHandler {
@@ -25,6 +26,8 @@ public class ScopeHandler {
     }
 
     public void insert(String name, Symbol symbol) throws CompilerError {
+        assert symbol != null;
+
         SymbolTable symbolTable = getSymbolTable();
         assert symbolTable != null;
 
@@ -38,6 +41,12 @@ public class ScopeHandler {
         }
 
         symbolTable.insert(name, symbol);
+    }
+
+    public void insertAll(SymbolTable symbolTable) throws CompilerError {
+        for (Map.Entry<String, Symbol> entry : symbolTable.getSymbols().entrySet()) {
+            insert(entry.getKey(), entry.getValue());
+        }
     }
 
     public SymbolTable getSymbolTable() {

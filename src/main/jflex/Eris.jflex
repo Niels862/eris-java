@@ -29,6 +29,9 @@ InvalidIntegerLiteral = -? [0-9][A-Za-z0-9_]*
 
 
 <YYINITIAL> {
+  "class"                   { return token(TokenKind.CLASS); }
+  "enum"                    { return token(TokenKind.ENUM); }
+  "extends"                 { return token(TokenKind.EXTENDS); }
   "func"                    { return token(TokenKind.FUNC); }
   "return"                  { return token(TokenKind.RETURN); }
   "if"                      { return token(TokenKind.IF); }

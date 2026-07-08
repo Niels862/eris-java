@@ -20,6 +20,9 @@ public enum TokenKind {
     IDEQ_OP("==="),
     IDNE_OP("!=="),
 
+    CLASS("class"),
+    ENUM("enum"),
+    EXTENDS("extends"),
     FUNC("func"),
     RETURN("return"),
     IF("if"),

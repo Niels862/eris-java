@@ -1,3 +1,11 @@
+class ClassA {
+
+}
+
+func f() -> ClassA? {
+    return null;
+}
+
 func main() -> int {
     var x: int? = 5;
     return x;

@@ -13,17 +13,19 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class SymbolBinder extends NodeVisitor<Void> {
+public class SymbolBinder extends NodeVisitor<Symbol> {
     private final BuildModule module;
     private final ModuleNode moduleNode;
+    private final SymbolTable definitions;
 
     private final ScopeHandler scopeHandler = new ScopeHandler();
     private final TypeContext context = TypeContext.instance;
     private final TypeBuilder typeBuilder = new TypeBuilder();
 
-    public SymbolBinder(BuildModule module, ModuleNode moduleNode) {
+    public SymbolBinder(BuildModule module, ModuleNode moduleNode, SymbolTable definitions) {
         this.module = module;
         this.moduleNode = moduleNode;
+        this.definitions = definitions;
     }
 
     public void bindSymbols() throws CompilerError {
@@ -33,25 +35,40 @@ public class SymbolBinder extends NodeVisitor<Void> {
     }
 
     @Override
-    public Void visit(ModuleNode node) throws CompilerError {
+    public Symbol visit(ModuleNode node) throws CompilerError {
         node.globalScope = scopeHandler.enterNewScope();
-        for (FunctionNode function : node.functions) {
-            function.accept(this);
+
+        scopeHandler.insertAll(definitions);
+
+        for (ClassNode classNode : node.classes) {
+            classNode.accept(this);
         }
+
+        for (FunctionNode functionNode : node.functions) {
+            functionNode.accept(this);
+        }
+
         scopeHandler.leaveScope(node.globalScope);
 
         FunctionType entryFunctionType = new FunctionType(Collections.emptyList(), context.INT);
-        node.entrySymbol = new FunctionSymbol("$entry", module, node.line, node.column, entryFunctionType);
+        node.entrySymbol = new FunctionSymbol("$entry", module, node.line, node.column);
+        node.entrySymbol.finalize(entryFunctionType);
         return null;
     }
 
     @Override
-    public Void visit(FunctionNode node) throws CompilerError {
+    public Symbol visit(ClassNode node) throws CompilerError {
+        return node.symbol;
+    }
+
+    @Override
+    public Symbol visit(FunctionNode node) throws CompilerError {
         node.scope = scopeHandler.enterNewScope();
 
         List<Type> parameterTypes = new ArrayList<Type>();
         for (ParameterNode parameter : node.parameters) {
-            parameter.accept(this);
+            Symbol symbol = parameter.accept(this);
+            scopeHandler.insert(symbol.name, symbol);
             parameterTypes.add(parameter.symbol.staticType);
         }
 
@@ -62,21 +79,19 @@ public class SymbolBinder extends NodeVisitor<Void> {
 
         Type returnType = buildType(node.returnType);
         FunctionType type = new FunctionType(parameterTypes, returnType);
-        node.symbol = new FunctionSymbol(node.name, module, node.line, node.column, type);
-        scopeHandler.insert(node.name, node.symbol);
-        return null;
+        node.symbol.finalize(type);
+        return node.symbol;
     }
 
     @Override
-    public Void visit(ParameterNode node) throws CompilerError {
+    public Symbol visit(ParameterNode node) throws CompilerError {
         Type type = buildType(node.type);
         node.symbol = new VariableSymbol(node.name, module, node.line, node.column, type);
-        scopeHandler.insert(node.name, node.symbol);
-        return null;
+        return node.symbol;
     }
 
     @Override
-    public Void visit(VariableNode node) throws CompilerError {
+    public Symbol visit(VariableNode node) throws CompilerError {
         Type type = null;
         if (node.type != null) {
             type = buildType(node.type);
@@ -91,13 +106,13 @@ public class SymbolBinder extends NodeVisitor<Void> {
     }
 
     @Override
-    public Void visit(AssignmentStatementNode node) throws CompilerError {
+    public Symbol visit(AssignmentStatementNode node) throws CompilerError {
         node.value.accept(this);
         return null;
     }
 
     @Override
-    public Void visit(IfElseStatementNode node) throws CompilerError {
+    public Symbol visit(IfElseStatementNode node) throws CompilerError {
         node.thenScope = scopeHandler.enterNewScope();
         node.condition.accept(this);
         for (StatementNode statement : node.thenBody) {
@@ -114,7 +129,7 @@ public class SymbolBinder extends NodeVisitor<Void> {
     }
 
     @Override
-    public Void visit(WhileStatementNode node) throws CompilerError {
+    public Symbol visit(WhileStatementNode node) throws CompilerError {
         node.scope = scopeHandler.enterNewScope();
         node.condition.accept(this);
         for (StatementNode statement : node.body) {
@@ -125,7 +140,7 @@ public class SymbolBinder extends NodeVisitor<Void> {
     }
 
     @Override
-    public Void visit(DoWhileStatementNode node) throws CompilerError {
+    public Symbol visit(DoWhileStatementNode node) throws CompilerError {
         node.scope = scopeHandler.enterNewScope();
         for (StatementNode statement : node.body) {
             statement.accept(this);
@@ -136,7 +151,7 @@ public class SymbolBinder extends NodeVisitor<Void> {
     }
 
     @Override
-    public Void visit(LoopStatementNode node) throws CompilerError {
+    public Symbol visit(LoopStatementNode node) throws CompilerError {
         node.scope = scopeHandler.enterNewScope();
         for (StatementNode statement : node.body) {
             statement.accept(this);
@@ -146,13 +161,13 @@ public class SymbolBinder extends NodeVisitor<Void> {
     }
 
     @Override
-    public Void visit(ExpressionStatementNode node) throws CompilerError {
+    public Symbol visit(ExpressionStatementNode node) throws CompilerError {
         node.expression.accept(this);
         return null;
     }
 
     @Override
-    public Void visit(ReturnStatementNode node) throws CompilerError {
+    public Symbol visit(ReturnStatementNode node) throws CompilerError {
         if (node.value != null) {
             node.value.accept(this);
         }
@@ -160,14 +175,14 @@ public class SymbolBinder extends NodeVisitor<Void> {
     }
 
     @Override
-    public Void visit(BinaryOperationNode node) throws CompilerError {
+    public Symbol visit(BinaryOperationNode node) throws CompilerError {
         node.left.accept(this);
         node.right.accept(this);
         return null;
     }
 
     @Override
-    public Void visit(CallNode node) throws CompilerError {
+    public Symbol visit(CallNode node) throws CompilerError {
         for (ExpressionNode expression : node.arguments) {
             expression.accept(this);
         }
@@ -175,27 +190,27 @@ public class SymbolBinder extends NodeVisitor<Void> {
     }
 
     @Override
-    public Void visit(IdentifierNode node) throws CompilerError {
+    public Symbol visit(IdentifierNode node) throws CompilerError {
         return null;
     }
 
     @Override
-    public Void visit(IntegerLiteralNode node) throws CompilerError {
+    public Symbol visit(IntegerLiteralNode node) throws CompilerError {
         return null;
     }
 
     @Override
-    public Void visit(BooleanLiteralNode node) throws CompilerError {
+    public Symbol visit(BooleanLiteralNode node) throws CompilerError {
         return null;
     }
 
     @Override
-    public Void visit(StringLiteralNode node) throws CompilerError {
+    public Symbol visit(StringLiteralNode node) throws CompilerError {
         return null;
     }
 
     @Override
-    public Void visit(NullLiteralNode node) throws CompilerError {
+    public Symbol visit(NullLiteralNode node) throws CompilerError {
         return null;
     }
 
