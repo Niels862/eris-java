@@ -19,13 +19,14 @@ public class LoadedModule {
     private final ModuleManager manager;
 
     private final Map<ModuleReferenceConstant, LoadedModule> resolvedModules = new HashMap<>();
+    private final Map<ClassReferenceConstant, LoadedClass> resolvedClasses = new HashMap<>();
     private final Map<FunctionReferenceConstant, LoadedFunction> resolvedFunctions = new HashMap<>();
 
     public LoadedModule(Module module, ModuleManager manager) {
         this.name = module.name;
         this.constants = module.constants;
         this.resolvedConstants = new Object[constants.size()];
-        this.entryFunction = new LoadedFunction(this, module.lookupFunction("$entry"));
+        this.entryFunction = new LoadedFunction(this, module.functions.get(module.entryFunctionReference));
         this.module = module;
         this.manager = manager;
 
@@ -56,6 +57,24 @@ public class LoadedModule {
 
         resolved = manager.getModuleByName(reference.name.value);
         resolvedModules.put(reference, resolved);
+        return resolved;
+    }
+
+    public LoadedClass resolveClass(ClassReferenceConstant reference) {
+        LoadedClass resolved = resolvedClasses.get(reference);
+        if (resolved != null) {
+            return resolved;
+        }
+
+        LoadedModule resolvedModule = resolveModule(reference.module);
+        if (resolvedModule == this) {
+            Class clazz = resolvedModule.module.lookupClass(reference.name.value);
+            resolved = new LoadedClass(this, clazz);
+        } else {
+            resolved = resolvedModule.resolveClass(reference);
+        }
+
+        resolvedClasses.put(reference, resolved);
         return resolved;
     }
 

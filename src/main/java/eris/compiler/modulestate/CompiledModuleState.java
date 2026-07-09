@@ -35,15 +35,17 @@ public class CompiledModuleState extends ModuleState {
             }
         }
 
+        int entryFunctionIndex = -1;
         for (BuildFunction function : state.functions) {
+            if (function.symbol == state.entrySymbol) {
+                entryFunctionIndex = functions.size();
+            }
+
             FunctionGenerator compiler = new FunctionGenerator(function, constantManager);
             functions.add(compiler.compile());
         }
 
-        FunctionReferenceConstant entryReference = constantManager.getFunctionReferenceConstant(state.entrySymbol);
-        int entryIndex = constantManager.getIndexOf(entryReference);
-
-        Module compiledModule = new Module(module.name, classes, functions, constants, entryIndex);
+        Module compiledModule = new Module(module.name, classes, functions, constants, entryFunctionIndex);
         compiledModule.dump();
 
         return new CompiledModuleState(compiledModule);

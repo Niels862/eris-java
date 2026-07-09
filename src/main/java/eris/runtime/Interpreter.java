@@ -3,6 +3,7 @@ package eris.runtime;
 import eris.module.Function;
 import eris.module.Instruction;
 import eris.module.Module;
+import eris.module.constant.ClassReferenceConstant;
 import eris.module.constant.Constant;
 import eris.module.constant.FunctionReferenceConstant;
 
@@ -125,7 +126,10 @@ public class Interpreter {
             }
 
             case NEW -> {
-                stack.add(null);
+                Constant constant = constants.get(argument);
+                ClassReferenceConstant reference = (ClassReferenceConstant) constant;
+                LoadedClass clazz = module.resolveClass(reference);
+                stack.add(new ErisObject(clazz, new Object[0]));
             }
 
             case EQ -> {
