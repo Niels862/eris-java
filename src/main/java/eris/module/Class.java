@@ -7,6 +7,10 @@ public class Class {
         this.name = name;
     }
 
+    public void dump() {
+        System.out.println("Class " + name);
+    }
+
     public String toString() {
         return "Class " + name;
     }

@@ -45,10 +45,18 @@ public class Module {
 
     public void dump() {
         System.out.println("Module " + this.name + " [" + entryFunctionReference + "]");
+
         System.out.println("Constants:");
         for (int i = 0; i < this.constants.size(); i++) {
             System.out.println("[" + i + "]: " + this.constants.get(i));
         }
+
+        System.out.println("Classes:");
+        for (int i = 0; i < this.classes.size(); i++) {
+            System.out.print("[" + i + "]: ");
+            this.classes.get(i).dump();
+        }
+
         System.out.println("Functions:");
         for (int i = 0; i < this.functions.size(); i++) {
             System.out.print("[" + i + "]: ");
