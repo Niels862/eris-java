@@ -1,7 +1,9 @@
-class ClassA {
-
+class Point {
+    x: int;
+    y: int;
 }
 
-func main() -> ClassA {
-    return ClassA();
+func main() -> Point {
+    var point = Point(1, 1);
+    return point;
 }

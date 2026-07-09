@@ -5,7 +5,6 @@ import eris.compiler.CompilerError;
 import eris.compiler.Token;
 import eris.compiler.TokenKind;
 import eris.compiler.ast.*;
-import eris.compiler.type.NullableType;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,10 +40,13 @@ public class Parser {
         expect(TokenKind.CLASS);
         Token name = expect(TokenKind.IDENTIFIER);
 
-        expect(TokenKind.LBRACE);
-        expect(TokenKind.RBRACE);
+        List<VariableNode> attributes = new ArrayList<>();
 
-        return new ClassNode(name, name.text);
+        parseBracedBlock(token -> {
+            attributes.add(parseVariable());
+        });
+
+        return new ClassNode(name, name.text, attributes);
     }
 
     private FunctionNode parseFunction() throws CompilerError {
@@ -86,7 +88,7 @@ public class Parser {
     }
 
     private StatementNode parseStatement() throws CompilerError {
-        if (matches(TokenKind.VAR)) {
+        if (matches(TokenKind.VAR) || (matches(TokenKind.IDENTIFIER) && matches(TokenKind.COLON, 1))) {
             return parseVariable();
         }
         if (matches(TokenKind.IF)) {
@@ -108,7 +110,8 @@ public class Parser {
     }
 
     private VariableNode parseVariable() throws CompilerError {
-        Token token = expect(TokenKind.VAR);
+        accept(TokenKind.VAR);
+
         Token name = expect(TokenKind.IDENTIFIER);
 
         TypeNode type = null;
@@ -199,19 +202,23 @@ public class Parser {
     }
 
     private List<StatementNode> parseStatementBlock() throws CompilerError {
+        List<StatementNode> statements = new ArrayList<>();
+        parseBracedBlock(_ -> {
+            statements.add(parseStatement());
+        });
+        return statements;
+    }
+
+    private void parseBracedBlock(Handler handler) throws CompilerError {
         expect(TokenKind.LBRACE);
 
-        List<StatementNode> statements = new ArrayList<>();
         while (accept(TokenKind.RBRACE) == null) {
-            StatementNode statement = parseStatement();
-            statements.add(statement);
+            handler.handle(getToken());
 
             if (atEnd()) {
                 throw new ParserError(getToken(), "Unexpected end of file before closing brace");
             }
         }
-
-        return statements;
     }
 
     private ExpressionNode parseExpression() throws CompilerError {
@@ -329,7 +336,7 @@ public class Parser {
     }
 
     private ExpressionNode parseLeftAssociativeBinaryOperation(
-            ExpressionProducer operandProducer, TokenKindMatcher matcher) throws CompilerError {
+            Producer<ExpressionNode> operandProducer, TokenKindMatcher matcher) throws CompilerError {
         ExpressionNode node = operandProducer.produce();
 
         while (matcher.matches(getToken().kind)) {
@@ -342,7 +349,7 @@ public class Parser {
     }
 
     private ExpressionNode parseNotAssociativeBinaryExpression(
-            ExpressionProducer producer, TokenKindMatcher matcher) throws CompilerError {
+            Producer<ExpressionNode> producer, TokenKindMatcher matcher) throws CompilerError {
         ExpressionNode node = producer.produce();
 
         if (matcher.matches(getToken().kind)) {
@@ -403,6 +410,16 @@ public class Parser {
         return getToken().kind == kind;
     }
 
+    private boolean matches(TokenKind kind, int advance) {
+        assert advance > 0;
+
+        if (index + advance >= tokens.size()) {
+            return false;
+        } else {
+            return tokens.get(index + advance).kind == kind;
+        }
+    }
+
     private Token nextToken() {
         Token token = getToken();
         if (index < tokens.size() - 1) {
@@ -442,8 +459,12 @@ public class Parser {
         }
     }
 
-    interface ExpressionProducer {
-        ExpressionNode produce() throws CompilerError;
+    interface Producer<T> {
+        T produce() throws CompilerError;
+    }
+
+    interface Handler {
+        void handle(Token token) throws CompilerError;
     }
 
     interface TokenKindMatcher {

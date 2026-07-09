@@ -4,14 +4,18 @@ import eris.compiler.CompilerError;
 import eris.compiler.Token;
 import eris.compiler.symbol.ClassSymbol;
 
+import java.util.List;
+
 public class ClassNode extends Node {
     public final String name;
+    public final List<VariableNode> attributes;
 
     public ClassSymbol symbol;
 
-    public ClassNode(Token token, String name) {
+    public ClassNode(Token token, String name, List<VariableNode> attributes) {
         super(token);
         this.name = name;
+        this.attributes = attributes;
     }
 
     @Override

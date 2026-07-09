@@ -58,6 +58,16 @@ public class SymbolBinder extends NodeVisitor<Symbol> {
 
     @Override
     public Symbol visit(ClassNode node) throws CompilerError {
+        SymbolTable members = scopeHandler.enterNewScope();
+        List<VariableSymbol> attributes = new ArrayList<>();
+
+        for (VariableNode variable : node.attributes) {
+            declare(variable);
+            attributes.add(variable.symbol);
+        }
+
+        node.symbol.finalize(attributes);
+        scopeHandler.leaveScope(members);
         return node.symbol;
     }
 
@@ -68,14 +78,13 @@ public class SymbolBinder extends NodeVisitor<Symbol> {
         List<Type> parameterTypes = new ArrayList<>();
         List<VariableSymbol> parameters = new ArrayList<>();
         for (ParameterNode parameter : node.parameters) {
-            Symbol symbol = parameter.accept(this);
-            scopeHandler.insert(symbol.name, symbol);
+            declare(parameter);
             parameterTypes.add(parameter.symbol.staticType);
             parameters.add(parameter.symbol);
         }
 
         for (StatementNode statement : node.statements) {
-            statement.accept(this);
+            declareAndPropagate(statement);
         }
         scopeHandler.leaveScope(node.scope);
 
@@ -103,28 +112,28 @@ public class SymbolBinder extends NodeVisitor<Symbol> {
                     String.format("Cannot infer type of %s: missing initial value", node.name));
         }
         node.symbol = new VariableSymbol(node.name, module, node.line, node.column, type);
-        scopeHandler.insert(node.name, node.symbol);
-        return null;
+        return node.symbol;
     }
 
     @Override
     public Symbol visit(AssignmentStatementNode node) throws CompilerError {
-        node.value.accept(this);
+        propagate(node.target);
+        propagate(node.value);
         return null;
     }
 
     @Override
     public Symbol visit(IfElseStatementNode node) throws CompilerError {
         node.thenScope = scopeHandler.enterNewScope();
-        node.condition.accept(this);
+        propagate(node.condition);
         for (StatementNode statement : node.thenBody) {
-            statement.accept(this);
+            declareAndPropagate(statement);
         }
         scopeHandler.leaveScope(node.thenScope);
 
         node.elseScope = scopeHandler.enterNewScope();
         for (StatementNode statement : node.elseBody) {
-            statement.accept(this);
+            declareAndPropagate(statement);
         }
         scopeHandler.leaveScope(node.elseScope);
         return null;
@@ -133,9 +142,9 @@ public class SymbolBinder extends NodeVisitor<Symbol> {
     @Override
     public Symbol visit(WhileStatementNode node) throws CompilerError {
         node.scope = scopeHandler.enterNewScope();
-        node.condition.accept(this);
+        propagate(node.condition);
         for (StatementNode statement : node.body) {
-            statement.accept(this);
+            declareAndPropagate(statement);
         }
         scopeHandler.leaveScope(node.scope);
         return null;
@@ -145,9 +154,9 @@ public class SymbolBinder extends NodeVisitor<Symbol> {
     public Symbol visit(DoWhileStatementNode node) throws CompilerError {
         node.scope = scopeHandler.enterNewScope();
         for (StatementNode statement : node.body) {
-            statement.accept(this);
+            declareAndPropagate(statement);
         }
-        node.condition.accept(this);
+        propagate(node.condition);
         scopeHandler.leaveScope(node.scope);
         return null;
     }
@@ -156,7 +165,7 @@ public class SymbolBinder extends NodeVisitor<Symbol> {
     public Symbol visit(LoopStatementNode node) throws CompilerError {
         node.scope = scopeHandler.enterNewScope();
         for (StatementNode statement : node.body) {
-            statement.accept(this);
+            declareAndPropagate(statement);
         }
         scopeHandler.leaveScope(node.scope);
         return null;
@@ -164,29 +173,29 @@ public class SymbolBinder extends NodeVisitor<Symbol> {
 
     @Override
     public Symbol visit(ExpressionStatementNode node) throws CompilerError {
-        node.expression.accept(this);
+        propagate(node.expression);
         return null;
     }
 
     @Override
     public Symbol visit(ReturnStatementNode node) throws CompilerError {
         if (node.value != null) {
-            node.value.accept(this);
+            propagate(node.value);
         }
         return null;
     }
 
     @Override
     public Symbol visit(BinaryOperationNode node) throws CompilerError {
-        node.left.accept(this);
-        node.right.accept(this);
+        propagate(node.left);
+        propagate(node.right);
         return null;
     }
 
     @Override
     public Symbol visit(CallNode node) throws CompilerError {
         for (ExpressionNode expression : node.arguments) {
-            expression.accept(this);
+            propagate(expression);
         }
         return null;
     }
@@ -214,6 +223,26 @@ public class SymbolBinder extends NodeVisitor<Symbol> {
     @Override
     public Symbol visit(NullLiteralNode node) throws CompilerError {
         return null;
+    }
+
+    private Symbol declare(Node node) throws CompilerError {
+        Symbol symbol = node.accept(this);
+        assert symbol != null;
+        scopeHandler.insert(symbol.name, symbol);
+        return symbol;
+    }
+
+    private void propagate(Node node) throws CompilerError {
+        Symbol symbol = node.accept(this);
+        assert symbol == null;
+    }
+
+    private Symbol declareAndPropagate(Node node) throws CompilerError {
+        Symbol symbol = node.accept(this);
+        if (symbol != null) {
+            scopeHandler.insert(symbol.name, symbol);
+        }
+        return symbol;
     }
 
     private Type buildType(TypeNode node) throws CompilerError {

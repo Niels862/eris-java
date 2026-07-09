@@ -27,6 +27,7 @@ public class NodeWriter extends NodeVisitor<Void> {
     @Override
     public Void visit(ClassNode node) throws CompilerError {
         write("name", node.name);
+        write("attributes", node.attributes);
         return null;
     }
 

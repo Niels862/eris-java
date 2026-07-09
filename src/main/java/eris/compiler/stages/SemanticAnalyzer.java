@@ -295,12 +295,16 @@ public class SemanticAnalyzer {
 
         @Override
         public Void visit(Call instruction) throws CompilerError {
-            for (Type parameterType : instruction.function.type.parameterTypes.reversed()) {
+            List<Type> parameterTypes = instruction.function.type.parameterTypes;
+
+            for (int i = parameterTypes.size() - 1; i >= 0; i--) {
+                Type parameterType = parameterTypes.get(i);
                 Type argumentType = state.stack.removeLast();
 
                 if (!isAssignable(argumentType, parameterType)) {
+                    String name = instruction.function.parameters.get(i).name;
                     String err = String.format("Cannot use `%s` value as argument %s of type `%s`",
-                            parameterType, argumentType, "(placeholder)");
+                            argumentType, name, parameterType);
                     throw instruction.error(module, err);
                 }
             }
