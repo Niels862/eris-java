@@ -2,8 +2,8 @@ class ClassA {
 
 }
 
-func f() -> ClassA? {
-    return null;
+func f() -> ClassA {
+    return ClassA();
 }
 
 func main() -> int {

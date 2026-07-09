@@ -5,9 +5,9 @@ import eris.compiler.CompilerError;
 
 public abstract class Symbol {
     public final String name;
-    private final BuildModule module;
-    private final int line;
-    private final int column;
+    protected final BuildModule module;
+    protected final int line;
+    protected final int column;
 
     public Symbol(String name, BuildModule module, int line, int column) {
         this.name = name;

@@ -199,9 +199,6 @@ public class SemanticAnalyzer {
         public void apply(SemanticState state, IntermediateInstruction instruction) throws CompilerError {
             this.state = state;
             instruction.accept(this);
-
-            System.out.printf("State after %s:\n", instruction);
-            state.dump();
         }
 
         @Override
@@ -287,6 +284,12 @@ public class SemanticAnalyzer {
             if (!isAssignable(context.BOOL, condition)) {
                 throw instruction.error(module, String.format("cannot use `%s` value as condition", condition));
             }
+            return null;
+        }
+
+        @Override
+        public Void visit(New instruction) throws CompilerError {
+            state.stack.add(instruction.symbol.valueType);
             return null;
         }
 

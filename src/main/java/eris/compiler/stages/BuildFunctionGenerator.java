@@ -7,6 +7,7 @@ import eris.compiler.TypeContext;
 import eris.compiler.ast.*;
 import eris.compiler.ir.*;
 import eris.compiler.symbol.*;
+import eris.compiler.type.FunctionType;
 
 import java.util.*;
 
@@ -98,11 +99,23 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
             throw new CompilerError(module, "Module does not have a main function");
         }
 
+        for (ClassNode classNode : node.classes) {
+            classNode.accept(statementGenerator);
+        }
+
         for (FunctionNode functionNode : node.functions) {
             functionNode.accept(statementGenerator);
         }
 
         scopeHandler.leaveScope(node.globalScope);
+        return null;
+    }
+
+    @Override
+    public Void visit(ClassNode node) throws CompilerError {
+        symbol = node.symbol.constructor;
+        emit(new New(node.symbol));
+        emit(new Return());
         return null;
     }
 
@@ -178,6 +191,12 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
     }
 
     private class StatementGenerator extends Generator {
+        @Override
+        public Void visit(ClassNode node) throws CompilerError {
+            addTask(node);
+            return null;
+        }
+
         @Override
         public Void visit(FunctionNode node) {
             addTask(node);
@@ -319,13 +338,26 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         public Void visit(CallNode node) throws CompilerError {
             if (node.function instanceof IdentifierNode identifier) {
                 Symbol symbol = scopeHandler.getSymbolTable().lookup(identifier.name);
-                if (symbol instanceof FunctionSymbol functionSymbol) {
-                    emitFunctionCall(functionSymbol, identifier, node.arguments);
-                    return null;
+
+                switch (symbol) {
+                    case FunctionSymbol functionSymbol -> {
+                        emitFunctionCall(functionSymbol, identifier, node.arguments);
+                    }
+
+                    case ClassSymbol classSymbol -> {
+                        emitFunctionCall(classSymbol.constructor, identifier, node.arguments);
+                    }
+
+                    case VariableSymbol variableSymbol -> {
+                        emitIndirectFunctionCall(node.function, node.arguments);
+                    }
+
+                    default -> throw new IllegalStateException("Unexpected value: " + symbol);
                 }
+            } else {
+                emitIndirectFunctionCall(node.function, node.arguments);
             }
 
-            emitIndirectFunctionCall(node.function, node.arguments);
             return null;
         }
 
