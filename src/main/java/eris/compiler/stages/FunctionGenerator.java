@@ -7,6 +7,7 @@ import eris.compiler.symbol.VariableSymbol;
 import eris.module.Function;
 import eris.module.Instruction;
 import eris.module.OpCode;
+import eris.module.constant.ClassReferenceConstant;
 import eris.module.constant.Constant;
 import eris.module.constant.FunctionReferenceConstant;
 
@@ -161,6 +162,13 @@ public class FunctionGenerator {
                     emit(OpCode.JUMP, instruction.elseOut.id);
                 }
             }
+            return null;
+        }
+
+        @Override
+        public Void visit(New instruction) throws CompilerError {
+            ClassReferenceConstant constant = constants.getClassReferenceConstant(instruction.clazz);
+            emit(OpCode.NEW, constants.getIndexOf(constant));
             return null;
         }
 

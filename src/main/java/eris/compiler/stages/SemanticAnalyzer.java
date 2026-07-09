@@ -289,7 +289,7 @@ public class SemanticAnalyzer {
 
         @Override
         public Void visit(New instruction) throws CompilerError {
-            state.stack.add(instruction.symbol.valueType);
+            state.stack.add(instruction.clazz.valueType);
             return null;
         }
 

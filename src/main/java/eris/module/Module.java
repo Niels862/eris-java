@@ -2,17 +2,36 @@ package eris.module;
 
 import eris.module.constant.Constant;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Module {
     public final String name;
+    public final List<Class> classes;
     public final List<Function> functions;
     public final List<Constant> constants;
+    public final int entryFunctionReference;
 
-    public Module(String name, List<Function> functions, List<Constant> constants) {
+    public Module(
+            String name,
+            List<Class> classes,
+            List<Function> functions,
+            List<Constant> constants,
+            int entryFunctionReference) {
         this.name = name;
+        this.classes = classes;
         this.functions = functions;
         this.constants = constants;
+        this.entryFunctionReference = entryFunctionReference;
+    }
+
+    public Class lookupClass(String name) {
+        for (Class clazz : classes) {
+            if (clazz.name.equals(name)) {
+                return clazz;
+            }
+        }
+        return null;
     }
 
     public Function lookupFunction(String name) {
@@ -25,7 +44,7 @@ public class Module {
     }
 
     public void dump() {
-        System.out.println("Module " + this.name);
+        System.out.println("Module " + this.name + " [" + entryFunctionReference + "]");
         System.out.println("Constants:");
         for (int i = 0; i < this.constants.size(); i++) {
             System.out.println("[" + i + "]: " + this.constants.get(i));

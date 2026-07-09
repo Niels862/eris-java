@@ -4,10 +4,10 @@ import eris.compiler.CompilerError;
 import eris.compiler.symbol.ClassSymbol;
 
 public class New extends IntermediateInstruction {
-    public final ClassSymbol symbol;
+    public final ClassSymbol clazz;
 
-    public New(ClassSymbol symbol) {
-        this.symbol = symbol;
+    public New(ClassSymbol clazz) {
+        this.clazz = clazz;
     }
 
     @Override
@@ -17,6 +17,6 @@ public class New extends IntermediateInstruction {
 
     @Override
     public String toString() {
-        return "NEW " + symbol.name;
+        return "NEW " + clazz.name;
     }
 }

@@ -2,11 +2,6 @@ class ClassA {
 
 }
 
-func f() -> ClassA {
+func main() -> ClassA {
     return ClassA();
-}
-
-func main() -> int {
-    var x: int? = 5;
-    return x;
 }

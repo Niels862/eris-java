@@ -6,8 +6,6 @@ import eris.module.Module;
 import eris.module.constant.Constant;
 import eris.module.constant.FunctionReferenceConstant;
 
-import eris.runtime.LoadedModule.ResolvedFunctionReference;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
@@ -33,16 +31,16 @@ public class Interpreter {
     }
 
     public void run() {
-        Function entryFunction = entryModule.getEntryFunction();
+        LoadedFunction entryFunction = entryModule.entryFunction;
         if (entryFunction == null) {
             throw new RuntimeException("Entry function not found");
         }
 
-        runFromEntryFunction(entryModule, entryFunction);
+        runFromEntryFunction(entryFunction);
     }
 
-    public void runFromEntryFunction(LoadedModule module, Function entry) {
-        enterFunction(module, entry);
+    public void runFromEntryFunction(LoadedFunction entryFunction) {
+        enterFunction(entryFunction);
 
         while (!halted) {
             Instruction instruction = code[instructionPointer];
@@ -55,14 +53,14 @@ public class Interpreter {
         dumpStack();
     }
 
-    public void enterFunction(LoadedModule module, Function function) {
+    public void enterFunction(LoadedFunction loadedFunction) {
         if (this.function != null) {
             CallFrame frame = new CallFrame(this.module, this.function, instructionPointer, basePointer);
             callStack.push(frame);
         }
 
-        this.module = module;
-        this.function = function;
+        this.module = loadedFunction.module;
+        this.function = loadedFunction.function;
         this.constants = module.constants;
         this.resolvedConstants = module.resolvedConstants;
         this.code = function.code;
@@ -122,6 +120,14 @@ public class Interpreter {
                 stack.removeLast();
             }
 
+            case DUP -> {
+                stack.add(stack.getLast());
+            }
+
+            case NEW -> {
+                stack.add(null);
+            }
+
             case EQ -> {
                 Object value1 = stack.removeLast();
                 Object value2 = stack.removeLast();
@@ -163,8 +169,7 @@ public class Interpreter {
             case CALL -> {
                 Constant constant = constants.get(argument);
                 FunctionReferenceConstant reference = (FunctionReferenceConstant) constant;
-                ResolvedFunctionReference resolved = module.resolveFunction(reference);
-                enterFunction(resolved.module, resolved.function);
+                enterFunction(module.resolveFunction(reference));
             }
 
             case RETURN -> {

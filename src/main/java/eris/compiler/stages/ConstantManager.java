@@ -1,6 +1,7 @@
 package eris.compiler.stages;
 
 import eris.compiler.BuildModule;
+import eris.compiler.symbol.ClassSymbol;
 import eris.compiler.symbol.FunctionSymbol;
 import eris.module.constant.*;
 
@@ -13,6 +14,7 @@ public class ConstantManager {
     private final List<Constant> constants = new ArrayList<>();
 
     private final Map<BuildModule, ModuleReferenceConstant> moduleReferenceConstants = new HashMap<>();
+    private final Map<ClassSymbol, ClassReferenceConstant> classReferenceConstants = new HashMap<>();
     private final Map<FunctionSymbol, FunctionReferenceConstant> functionReferenceConstants = new HashMap<>();
     private final Map<Integer, IntegerConstant> integerConstants = new HashMap<>();
     private final Map<String, StringConstant> stringConstants = new HashMap<>();
@@ -25,6 +27,17 @@ public class ConstantManager {
             StringConstant nameConstant = getStringConstant(module.name);
             constant = new ModuleReferenceConstant(nameConstant);
             insert(constant, module, moduleReferenceConstants);
+        }
+        return constant;
+    }
+
+    public ClassReferenceConstant getClassReferenceConstant(ClassSymbol clazz) {
+        ClassReferenceConstant constant = classReferenceConstants.get(clazz);
+        if (constant == null) {
+            ModuleReferenceConstant moduleReference = getModuleReferenceConstant(clazz.getModule());
+            StringConstant nameConstant = getStringConstant(clazz.name);
+            constant = new ClassReferenceConstant(moduleReference, nameConstant);
+            insert(constant, clazz, classReferenceConstants);
         }
         return constant;
     }

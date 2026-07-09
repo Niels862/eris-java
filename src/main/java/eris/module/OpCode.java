@@ -6,6 +6,9 @@ public enum OpCode {
     LOAD_LOCAL(Format.INTEGER),
     STORE_LOCAL(Format.INTEGER),
     POP,
+    DUP,
+
+    NEW(Format.INTEGER),
 
     EQ,
     NE,
