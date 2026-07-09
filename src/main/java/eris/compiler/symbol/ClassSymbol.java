@@ -5,6 +5,7 @@ import eris.compiler.type.ClassType;
 import eris.compiler.type.FunctionType;
 
 import java.util.Collections;
+import java.util.List;
 
 public class ClassSymbol extends TypeSymbol {
     public final ClassType valueType;
@@ -23,7 +24,9 @@ public class ClassSymbol extends TypeSymbol {
 
     private FunctionSymbol makeDefaultConstructor() {
         FunctionSymbol symbol = new FunctionSymbol(name + ".$constructor", module, line, column);
-        symbol.finalize(new FunctionType(Collections.emptyList(), valueType));
+        FunctionType type = new FunctionType(Collections.singletonList(valueType), valueType);
+        VariableSymbol thisParameter = new VariableSymbol("this", module, line, column, valueType);
+        symbol.finalize(type, Collections.singletonList(thisParameter));
         return symbol;
     }
 }

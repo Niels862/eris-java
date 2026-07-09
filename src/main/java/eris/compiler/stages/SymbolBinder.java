@@ -52,7 +52,7 @@ public class SymbolBinder extends NodeVisitor<Symbol> {
 
         FunctionType entryFunctionType = new FunctionType(Collections.emptyList(), context.INT);
         node.entrySymbol = new FunctionSymbol("$entry", module, node.line, node.column);
-        node.entrySymbol.finalize(entryFunctionType);
+        node.entrySymbol.finalize(entryFunctionType, Collections.emptyList());
         return null;
     }
 
@@ -65,11 +65,13 @@ public class SymbolBinder extends NodeVisitor<Symbol> {
     public Symbol visit(FunctionNode node) throws CompilerError {
         node.scope = scopeHandler.enterNewScope();
 
-        List<Type> parameterTypes = new ArrayList<Type>();
+        List<Type> parameterTypes = new ArrayList<>();
+        List<VariableSymbol> parameters = new ArrayList<>();
         for (ParameterNode parameter : node.parameters) {
             Symbol symbol = parameter.accept(this);
             scopeHandler.insert(symbol.name, symbol);
             parameterTypes.add(parameter.symbol.staticType);
+            parameters.add(parameter.symbol);
         }
 
         for (StatementNode statement : node.statements) {
@@ -79,7 +81,7 @@ public class SymbolBinder extends NodeVisitor<Symbol> {
 
         Type returnType = buildType(node.returnType);
         FunctionType type = new FunctionType(parameterTypes, returnType);
-        node.symbol.finalize(type);
+        node.symbol.finalize(type, parameters);
         return node.symbol;
     }
 

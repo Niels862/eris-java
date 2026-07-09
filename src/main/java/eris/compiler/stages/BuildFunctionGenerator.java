@@ -64,13 +64,6 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         parameters = new ArrayList<>();
         blocks.add(block);
 
-        if (task.node instanceof FunctionNode functionNode) {
-            for (ParameterNode parameter : functionNode.parameters) {
-                parameter.symbol.setDeclared();
-                parameters.add(parameter.symbol);
-            }
-        }
-
         if (task.enclosing != null) {
             scopeHandler.enterScope(task.enclosing);
         }
@@ -86,9 +79,18 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         }
     }
 
+    private void setSymbol(FunctionSymbol symbol) {
+        this.symbol = symbol;
+
+        for (VariableSymbol parameter : symbol.parameters) {
+            parameter.setDeclared();
+            parameters.add(parameter);
+        }
+    }
+
     @Override
     public Void visit(ModuleNode node) throws CompilerError {
-        symbol = node.entrySymbol;
+        setSymbol(node.entrySymbol);
         scopeHandler.enterScope(node.globalScope);
 
         Symbol mainSymbol = scopeHandler.getSymbolTable().lookup("main");
@@ -113,15 +115,16 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
 
     @Override
     public Void visit(ClassNode node) throws CompilerError {
-        symbol = node.symbol.constructor;
-        emit(new New(node.symbol));
+        setSymbol(node.symbol.constructor);
+        VariableSymbol thisSymbol = parameters.getFirst();
+        emit(new LoadLocal(thisSymbol));
         emit(new Return());
         return null;
     }
 
     @Override
     public Void visit(FunctionNode node) throws CompilerError {
-        symbol = node.symbol;
+        setSymbol(node.symbol);
         scopeHandler.enterScope(node.scope);
 
         for (StatementNode statement : node.statements) {
@@ -345,6 +348,7 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
                     }
 
                     case ClassSymbol classSymbol -> {
+                        emit(new New(classSymbol));
                         emitFunctionCall(classSymbol.constructor, identifier, node.arguments);
                     }
 

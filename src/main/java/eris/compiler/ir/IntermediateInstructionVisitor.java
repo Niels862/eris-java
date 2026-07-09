@@ -28,6 +28,10 @@ public abstract class IntermediateInstructionVisitor<T> {
         return defaultHandler(instruction);
     }
 
+    public T visit(Duplicate instruction) throws CompilerError {
+        return defaultHandler(instruction);
+    }
+
     public T visit(BinaryOperation instruction) throws CompilerError {
         return defaultHandler(instruction);
     }
