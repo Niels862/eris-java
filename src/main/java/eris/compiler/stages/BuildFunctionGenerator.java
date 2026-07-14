@@ -210,7 +210,7 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         public Void visit(VariableNode node) throws CompilerError {
             if (node.initialValue != null) {
                 expressionGenerator.generate(node.initialValue);
-                Convert converter = emit(new Convert(node.symbol.staticType));
+                Convert converter = emit(new Convert(null));
                 emit(new StoreLocal(node.symbol, true, converter));
             }
             node.symbol.setDeclared();
@@ -428,7 +428,7 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         public Void visit(IdentifierNode node) throws CompilerError {
             VariableSymbol symbol = lookupVariableSymbol(node, node.name);
             emit(new StoreLocal(symbol, false, converter));
-            converter.toType = symbol.staticType;
+            converter.toType = null;
             return null;
         }
     }

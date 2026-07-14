@@ -23,8 +23,7 @@ public class Compiler {
         List<Module> compiledModules = new ArrayList<>();
         try {
             BuildModule module = manager.getBuildModule(this.entry);
-            compiledModules.add(module.compile());
-            compiledModules.addAll(manager.getCompiledDependencyModules(module));
+            module.parse();
         } catch (CompilerError e) {
             System.err.println(e.getMessage());
             return null;

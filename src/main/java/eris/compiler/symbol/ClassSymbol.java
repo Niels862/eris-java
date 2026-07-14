@@ -32,14 +32,14 @@ public class ClassSymbol extends TypeSymbol {
 
     private FunctionSymbol makeDefaultConstructor() {
         List<VariableSymbol> parameters = new ArrayList<>();
-        parameters.add(new VariableSymbol("this", module, line, column, valueType));
+        parameters.add(new VariableSymbol("this", module, line, column));
 
         List<Type> parameterTypes = new ArrayList<>();
         parameterTypes.add(valueType);
 
         for (VariableSymbol attribute : attributes) {
             parameters.add(attribute);
-            parameterTypes.add(attribute.staticType); // FIXME: enforce static type is set
+            parameterTypes.add(attribute.getType()); // FIXME: enforce static type is set
         }
 
         FunctionSymbol symbol = new FunctionSymbol(name + ".$constructor", module, line, column);

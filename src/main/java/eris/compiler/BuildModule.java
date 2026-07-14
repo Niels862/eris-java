@@ -1,74 +1,51 @@
 package eris.compiler;
 
-import eris.compiler.modulestate.*;
-import eris.module.Module;
+import eris.compiler.ast.ModuleNode;
+import eris.compiler.ast.NodeWriter;
+import eris.compiler.stages.Parser;
 
+import java.io.IOException;
+import java.io.Reader;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 public class BuildModule {
     public final String name;
     public final Path path;
-
-    private ModuleState state;
 
     public BuildModule(String name, Path path) {
         this.name = name;
         this.path = path;
     }
 
-    public void preParse() throws CompilerError {
-        if (state == null) {
-            state = PreParsedModuleState.build(this);
-        }
-    }
-
     public void parse() throws CompilerError {
-        if (!(state instanceof PreParsedModuleState)) {
-            preParse();
+        List<Token> tokens = new ArrayList<>();
+
+        try {
+            try (Reader reader = Files.newBufferedReader(path)) {
+                eris.compiler.Lexer lexer = new eris.compiler.Lexer(reader);
+
+                Token token;
+                do {
+                    token = lexer.nextToken();
+                    tokens.add(token);
+                } while (token.kind != TokenKind.EOF);
+            }
+        } catch (IOException e) {
+            throw new CompilerError(String.format("Could not read %s", path));
         }
 
-        if (state instanceof PreParsedModuleState preParsedModuleState) {
-            state = ParsedModuleState.build(this, preParsedModuleState);
-        }
-    }
+        // Here, the tokens can be scanned for exported symbols, which can be set here without dependencies
 
-    public void bindSymbols() throws CompilerError {
-        if (!(state instanceof ParsedModuleState)) {
-            parse();
-        }
+        Parser parser = new Parser(this, tokens);
+        ModuleNode moduleNode = parser.parse();
 
-        if (state instanceof ParsedModuleState parsedModuleState) {
-            state = ScopeBoundModuleState.build(this, parsedModuleState);
-        }
-    }
-
-    public void generate() throws CompilerError {
-        if (!(state instanceof ScopeBoundModuleState)) {
-            bindSymbols();
-        }
-
-        if (state instanceof ScopeBoundModuleState scopeBoundModuleState) {
-            state = GeneratedModuleState.build(this, scopeBoundModuleState);
-        }
-    }
-
-    public Module compile() throws CompilerError {
-        if (!(state instanceof GeneratedModuleState)) {
-            generate();
-        }
-
-        if (state instanceof GeneratedModuleState generatedModuleState) {
-            state = CompiledModuleState.build(this, generatedModuleState);
-        }
-
-        if (state instanceof CompiledModuleState compiledModuleState) {
-            return compiledModuleState.getCompiledModule();
-        } else {
-            throw new RuntimeException("Unexpected state: " + state);
-        }
+        new NodeWriter().write(moduleNode);
     }
 
     public String toString() {
-        return String.format("<BuildModule at %s : %s>", path, state);
+        return String.format("<BuildModule at %s>", path);
     }
 }

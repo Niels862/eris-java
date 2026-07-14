@@ -38,18 +38,6 @@ public class BuildManager {
         throw new CompilerError(String.format("Could not find name '%s' in source paths", name));
     }
 
-    public List<Module> getCompiledDependencyModules(BuildModule entryModule) throws CompilerError {
-        List<Module> compiledModules = new ArrayList<>();
-
-        for (BuildModule module : modules.values()) {
-            if (!module.equals(entryModule)) {
-                compiledModules.add(module.compile());
-            }
-        }
-
-        return compiledModules;
-    }
-
     private String moduleNameToErisPath(String moduleName) {
         return moduleName + ".eris";
     }
