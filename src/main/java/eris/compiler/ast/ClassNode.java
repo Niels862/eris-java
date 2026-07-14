@@ -6,7 +6,7 @@ import eris.compiler.symbol.ClassSymbol;
 
 import java.util.List;
 
-public class ClassNode extends Node {
+public class ClassNode extends Node implements DeclarationNode {
     public final String name;
     public final List<VariableNode> attributes;
 
@@ -21,5 +21,10 @@ public class ClassNode extends Node {
     @Override
     public <T> T accept(NodeVisitor<T> visitor) throws CompilerError {
         return visitor.visit(this);
+    }
+
+    @Override
+    public ClassSymbol getSymbol() {
+        return symbol;
     }
 }

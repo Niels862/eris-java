@@ -4,7 +4,7 @@ import eris.compiler.CompilerError;
 import eris.compiler.Token;
 import eris.compiler.symbol.VariableSymbol;
 
-public class VariableNode extends StatementNode {
+public class VariableNode extends StatementNode implements DeclarationNode {
     public final String name;
     public final ExpressionNode initialValue;
     public final TypeNode type;
@@ -21,5 +21,10 @@ public class VariableNode extends StatementNode {
     @Override
     public <T> T accept(NodeVisitor<T> visitor) throws CompilerError {
         return visitor.visit(this);
+    }
+
+    @Override
+    public VariableSymbol getSymbol() {
+        return symbol;
     }
 }

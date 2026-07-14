@@ -4,15 +4,16 @@ import eris.compiler.BuildModule;
 import eris.compiler.type.Type;
 
 public class VariableSymbol extends Symbol {
-    public final Type staticType;
-
     private int slotIndex = -1;
     private boolean isDeclared = false;
     private Type type;
 
-    public VariableSymbol(String name, BuildModule module, int line, int column, Type staticType) {
+    public VariableSymbol(String name, BuildModule module, int line, int column) {
         super(name, module, line, column);
-        this.staticType = staticType;
+    }
+
+    public void setMeta(Type type) {
+        this.type = type;
     }
 
     public int getSlotIndex() {
@@ -38,11 +39,6 @@ public class VariableSymbol extends Symbol {
     public Type getType() {
         assert type != null;
         return type;
-    }
-
-    public void setType(Type type) {
-        assert staticType == null || staticType == type;
-        this.type = type;
     }
 
     @Override

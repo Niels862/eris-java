@@ -4,7 +4,7 @@ import eris.compiler.CompilerError;
 import eris.compiler.Token;
 import eris.compiler.symbol.VariableSymbol;
 
-public class ParameterNode extends Node {
+public class ParameterNode extends Node implements DeclarationNode {
     public final String name;
     public final TypeNode type;
 
@@ -18,5 +18,10 @@ public class ParameterNode extends Node {
 
     public <T> T accept(NodeVisitor<T> visitor) throws CompilerError {
         return visitor.visit(this);
+    }
+
+    @Override
+    public VariableSymbol getSymbol() {
+        return symbol;
     }
 }

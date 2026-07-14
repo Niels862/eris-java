@@ -7,7 +7,7 @@ import eris.compiler.symbol.SymbolTable;
 
 import java.util.List;
 
-public class FunctionNode extends Node {
+public class FunctionNode extends Node implements DeclarationNode {
     public final String name;
     public final List<StatementNode> statements;
     public final List<ParameterNode> parameters;
@@ -30,5 +30,10 @@ public class FunctionNode extends Node {
 
     public <T> T accept(NodeVisitor<T> visitor) throws CompilerError {
         return visitor.visit(this);
+    }
+
+    @Override
+    public FunctionSymbol getSymbol() {
+        return symbol;
     }
 }
