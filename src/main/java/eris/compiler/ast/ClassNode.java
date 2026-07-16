@@ -24,6 +24,11 @@ public class ClassNode extends Node implements DeclarationNode {
     }
 
     @Override
+    public <T> void acceptChildren(NodeVisitor<T> visitor) throws CompilerError {
+        NodeVisitor.accept(visitor, attributes);
+    }
+
+    @Override
     public ClassSymbol getSymbol() {
         return symbol;
     }

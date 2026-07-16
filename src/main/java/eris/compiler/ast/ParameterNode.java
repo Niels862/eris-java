@@ -21,6 +21,11 @@ public class ParameterNode extends Node implements DeclarationNode {
     }
 
     @Override
+    public <T> void acceptChildren(NodeVisitor<T> visitor) throws CompilerError {
+        type.accept(visitor);
+    }
+
+    @Override
     public VariableSymbol getSymbol() {
         return symbol;
     }

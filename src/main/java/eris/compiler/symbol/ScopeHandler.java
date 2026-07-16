@@ -8,15 +8,13 @@ import java.util.Stack;
 public class ScopeHandler {
     private final Stack<SymbolTable> enteredScopes = new Stack<>();
 
-    public SymbolTable enterNewScope() {
-        SymbolTable parent = getSymbolTable();
-        SymbolTable symbolTable = new SymbolTable(parent);
-        enteredScopes.push(symbolTable);
-        return symbolTable;
-    }
+    private static final SymbolTable nullTable = new SymbolTable();
 
     public void enterScope(SymbolTable symbolTable) {
         assert symbolTable != null;
+        if (!symbolTable.active()) {
+            symbolTable.setParent(getSymbolTable());
+        }
         enteredScopes.push(symbolTable);
     }
 
@@ -25,11 +23,11 @@ public class ScopeHandler {
         assert top == symbolTable;
     }
 
-    public void insert(String name, Symbol symbol) throws CompilerError {
+    public void declare(String name, Symbol symbol) throws CompilerError {
         assert symbol != null;
 
         SymbolTable symbolTable = getSymbolTable();
-        assert symbolTable != null;
+        assert symbolTable != nullTable;
 
         if (symbolTable.defines(name)) {
             throw symbol.error("Already defined in this scope: " + name);
@@ -43,15 +41,9 @@ public class ScopeHandler {
         symbolTable.insert(name, symbol);
     }
 
-    public void insertAll(SymbolTable symbolTable) throws CompilerError {
-        for (Map.Entry<String, Symbol> entry : symbolTable.getSymbols().entrySet()) {
-            insert(entry.getKey(), entry.getValue());
-        }
-    }
-
     public SymbolTable getSymbolTable() {
         if (enteredScopes.isEmpty()) {
-            return null;
+            return nullTable;
         } else {
             return enteredScopes.peek();
         }

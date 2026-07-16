@@ -2,6 +2,8 @@ package eris.compiler.ast;
 
 import eris.compiler.CompilerError;
 
+import java.util.List;
+
 public abstract class NodeVisitor<T> {
     public T defaultHandler(Node node) throws CompilerError {
         String string = String.format("%s does not implement %s", getClass().getSimpleName(), node);
@@ -90,5 +92,15 @@ public abstract class NodeVisitor<T> {
 
     public T visit(NullableTypeNode node) throws CompilerError {
         return defaultHandler(node);
+    }
+
+    public void visitChildren(Node node) throws CompilerError {
+        node.acceptChildren(this);
+    }
+
+    public static <T, U extends Node> void accept(NodeVisitor<T> visitor, List<U> nodes) throws CompilerError {
+        for (U node : nodes) {
+            node.accept(visitor);
+        }
     }
 }

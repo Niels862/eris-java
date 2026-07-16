@@ -209,6 +209,10 @@ public class NodeWriter extends NodeVisitor<Void> {
     }
 
     private void writeDefault(Node node) {
-        write(node.getClass().getSimpleName() + " at " + node.line + ":" + node.column);
+        String s = node.getClass().getSimpleName() + " at " + node.line + ":" + node.column;
+        if (node instanceof DeclarationNode declarationNode) {
+            s += " declares " + declarationNode.getSymbol();
+        }
+        write(s);
     }
 }

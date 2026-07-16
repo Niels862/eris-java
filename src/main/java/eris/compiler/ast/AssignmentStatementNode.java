@@ -17,4 +17,9 @@ public class AssignmentStatementNode extends StatementNode {
     public <T> T accept(NodeVisitor<T> visitor) throws CompilerError {
         return visitor.visit(this);
     }
+
+    public <T> void acceptChildren(NodeVisitor<T> visitor) throws CompilerError {
+        target.accept(visitor);
+        value.accept(visitor);
+    }
 }

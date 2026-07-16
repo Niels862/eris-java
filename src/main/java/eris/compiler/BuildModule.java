@@ -3,6 +3,8 @@ package eris.compiler;
 import eris.compiler.ast.ModuleNode;
 import eris.compiler.ast.NodeWriter;
 import eris.compiler.stages.Parser;
+import eris.compiler.stages.SymbolDeclarer;
+import eris.compiler.stages.SymbolResolver;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -14,6 +16,8 @@ import java.util.List;
 public class BuildModule {
     public final String name;
     public final Path path;
+
+    public ModuleNode moduleNode;
 
     public BuildModule(String name, Path path) {
         this.name = name;
@@ -40,7 +44,15 @@ public class BuildModule {
         // Here, the tokens can be scanned for exported symbols, which can be set here without dependencies
 
         Parser parser = new Parser(this, tokens);
-        ModuleNode moduleNode = parser.parse();
+        moduleNode = parser.parse();
+    }
+
+    public void analyze() throws CompilerError {
+        SymbolDeclarer declarer = new SymbolDeclarer(this);
+        declarer.declareSymbols();
+
+        SymbolResolver resolver = new SymbolResolver(this);
+        resolver.resolveSymbols();
 
         new NodeWriter().write(moduleNode);
     }

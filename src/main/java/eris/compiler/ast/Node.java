@@ -14,6 +14,8 @@ public abstract class Node {
 
     public abstract <T> T accept(NodeVisitor<T> visitor) throws CompilerError;
 
+    public abstract <T> void acceptChildren(NodeVisitor<T> visitor) throws CompilerError;
+
     public String toString() {
         return String.format("<%s>", getClass().getSimpleName());
     }

@@ -5,7 +5,7 @@ import java.util.Map;
 
 public class SymbolTable {
     private final Map<String, Symbol> symbols = new HashMap<>();
-    private final SymbolTable parent;
+    private SymbolTable parent;
 
     public SymbolTable() {
         this.parent = null;
@@ -36,9 +36,20 @@ public class SymbolTable {
     }
 
     public void insert(String name, Symbol symbol) {
+        assert parent != null;
         assert !defines(name);
         assert !(lookup(name) instanceof TypeSymbol);
         symbols.put(name, symbol);
+    }
+
+    public void setParent(SymbolTable parent) {
+        assert this.parent == null;
+        assert symbols.isEmpty();
+        this.parent = parent;
+    }
+
+    public boolean active() {
+        return parent != null;
     }
 
     public Map<String, Symbol> getSymbols() {

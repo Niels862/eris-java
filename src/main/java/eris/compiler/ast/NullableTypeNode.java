@@ -15,4 +15,9 @@ public class NullableTypeNode extends TypeNode {
     public <T> T accept(NodeVisitor<T> visitor) throws CompilerError {
         return visitor.visit(this);
     }
+
+    @Override
+    public <T> void acceptChildren(NodeVisitor<T> visitor) throws CompilerError {
+        type.accept(visitor);
+    }
 }

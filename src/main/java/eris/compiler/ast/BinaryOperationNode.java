@@ -19,4 +19,9 @@ public class BinaryOperationNode extends ExpressionNode {
     public <T> T accept(NodeVisitor<T> visitor) throws CompilerError {
         return visitor.visit(this);
     }
+
+    public <T> void acceptChildren(NodeVisitor<T> visitor) throws CompilerError {
+        left.accept(visitor);
+        right.accept(visitor);
+    }
 }

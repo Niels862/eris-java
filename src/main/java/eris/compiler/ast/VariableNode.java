@@ -24,6 +24,16 @@ public class VariableNode extends StatementNode implements DeclarationNode {
     }
 
     @Override
+    public <T> void acceptChildren(NodeVisitor<T> visitor) throws CompilerError {
+        if (initialValue != null) {
+            initialValue.accept(visitor);
+        }
+        if (type != null) {
+            type.accept(visitor);
+        }
+    }
+
+    @Override
     public VariableSymbol getSymbol() {
         return symbol;
     }
