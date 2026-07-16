@@ -19,8 +19,8 @@ public class ClassSymbol extends TypeSymbol {
         this.valueType = new ClassType(this);
     }
 
-    public void finalize(List<VariableSymbol> attributes) {
-        this.attributes = Collections.unmodifiableList(attributes);
+    public void setMeta(List<VariableSymbol> attributes) {
+        this.attributes = attributes;
         this.constructor = makeDefaultConstructor();
     }
 

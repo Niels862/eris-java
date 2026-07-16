@@ -25,6 +25,7 @@ public class Compiler {
             BuildModule module = manager.getBuildModule(this.entry);
             module.parse();
             module.analyze();
+
         } catch (CompilerError e) {
             System.err.println(e.getMessage());
             return null;

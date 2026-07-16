@@ -7,7 +7,6 @@ import eris.compiler.symbol.*;
 import eris.compiler.type.FunctionType;
 import eris.compiler.type.Type;
 import eris.compiler.type.TypeBuilder;
-import jdk.jfr.BooleanFlag;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +40,13 @@ public class SymbolResolver {
         @Override
         public Void visit(ClassNode node) throws CompilerError {
             super.visit(node);
+
+            List<VariableSymbol> attributes = new ArrayList<>();
+            for (VariableNode attribute : node.attributes) {
+                attributes.add(attribute.symbol);
+            }
+
+            node.symbol.setMeta(attributes);
             return null;
         }
 

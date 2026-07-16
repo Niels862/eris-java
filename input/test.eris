@@ -8,6 +8,6 @@ func make_point(x: int, y: int) -> Point {
 }
 
 func main() -> Point {
-    var point: Point = make_point(3, 5);
+    point: Point = make_point(3, 5);
     return point;
 }

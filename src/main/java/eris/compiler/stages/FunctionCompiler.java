@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class FunctionGenerator {
+public class FunctionCompiler {
     private final BuildFunction function;
     private final ConstantManager constants;
 
@@ -24,7 +24,7 @@ public class FunctionGenerator {
 
     private BasicBlock nextBlock;
 
-    public FunctionGenerator(BuildFunction function, ConstantManager constants) {
+    public FunctionCompiler(BuildFunction function, ConstantManager constants) {
         this.function = function;
         this.constants = constants;
     }

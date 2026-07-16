@@ -2,9 +2,8 @@ package eris.compiler;
 
 import eris.compiler.ast.ModuleNode;
 import eris.compiler.ast.NodeWriter;
-import eris.compiler.stages.Parser;
-import eris.compiler.stages.SymbolDeclarer;
-import eris.compiler.stages.SymbolResolver;
+import eris.compiler.stages.*;
+import eris.module.Function;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -55,6 +54,24 @@ public class BuildModule {
         resolver.resolveSymbols();
 
         new NodeWriter().write(moduleNode);
+    }
+
+    public Module compile() throws CompilerError {
+        List<BuildFunction> buildFunctions = generateBuildFunctions();
+
+        ConstantManager constantManager = new ConstantManager();
+        List<Function> functions = new ArrayList<>();
+        for (BuildFunction buildFunction : buildFunctions) {
+            FunctionCompiler compiler = new FunctionCompiler(buildFunction, constantManager);
+            functions.add(compiler.compile());
+        }
+
+        return null;
+    }
+
+    private List<BuildFunction> generateBuildFunctions() throws CompilerError {
+        BuildFunctionGenerator generator = new BuildFunctionGenerator(this);
+        return generator.generate(this.moduleNode);
     }
 
     public String toString() {
