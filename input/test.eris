@@ -3,7 +3,11 @@ class Point {
     y: int;
 }
 
+func make_point(x: int, y: int) -> Point {
+    return Point(x, y);
+}
+
 func main() -> Point {
-    var point = Point(1, 1);
+    var point: Point = make_point(3, 5);
     return point;
 }

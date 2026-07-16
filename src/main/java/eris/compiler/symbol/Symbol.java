@@ -9,11 +9,14 @@ public abstract class Symbol {
     protected final int line;
     protected final int column;
 
-    public Symbol(String name, BuildModule module, int line, int column) {
+    private boolean active;
+
+    public Symbol(String name, BuildModule module, int line, int column, boolean active) {
         this.name = name;
         this.module = module;
         this.line = line;
         this.column = column;
+        this.active = active;
     }
 
     public BuildModule getModule() {
@@ -29,5 +32,13 @@ public abstract class Symbol {
         } else {
             return new CompilerError(message);
         }
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive() {
+        active = true;
     }
 }

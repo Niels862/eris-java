@@ -117,6 +117,7 @@ public class NodeWriter extends NodeVisitor<Void> {
     @Override
     public Void visit(IdentifierNode node) throws CompilerError {
         write("name", node.name);
+        write("symbol", node.symbol);
         return null;
     }
 
@@ -146,6 +147,7 @@ public class NodeWriter extends NodeVisitor<Void> {
     @Override
     public Void visit(NamedTypeNode node) throws CompilerError {
         write("name", node.name);
+        write("symbol", node.symbol);
         return null;
     }
 
@@ -161,7 +163,7 @@ public class NodeWriter extends NodeVisitor<Void> {
     }
 
     private void write(String key, Object value) {
-        write(key + ": " + value.toString());
+        write(key + ": " + value);
     }
 
     private void write(String key, String value) {

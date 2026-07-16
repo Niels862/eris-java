@@ -81,11 +81,7 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
 
     private void setSymbol(FunctionSymbol symbol) {
         this.symbol = symbol;
-
-        for (VariableSymbol parameter : symbol.parameters) {
-            parameter.setDeclared();
-            parameters.add(parameter);
-        }
+        parameters.addAll(symbol.parameters);
     }
 
     @Override
@@ -145,11 +141,6 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         System.out.println(symbol + " " + name + " " + scopeHandler.getSymbolTable());
 
         if (symbol instanceof VariableSymbol variableSymbol) {
-            if (!variableSymbol.isDeclared()) {
-                throw new CompilerError(
-                        module, node.line, node.column,
-                        String.format("Variable %s is referenced before declaration", name));
-            }
             return variableSymbol;
         } else if (symbol == null) {
             throw new CompilerError(module, node.line, node.column, name + " is not declared in this scope");
@@ -213,7 +204,6 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
                 Convert converter = emit(new Convert(null));
                 emit(new StoreLocal(node.symbol, true, converter));
             }
-            node.symbol.setDeclared();
             locals.add(node.symbol);
             return null;
         }

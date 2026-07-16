@@ -44,7 +44,6 @@ public class SymbolTable {
 
     public void setParent(SymbolTable parent) {
         assert this.parent == null;
-        assert symbols.isEmpty();
         this.parent = parent;
     }
 

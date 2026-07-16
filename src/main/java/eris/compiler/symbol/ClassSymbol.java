@@ -1,7 +1,6 @@
 package eris.compiler.symbol;
 
 import eris.compiler.BuildModule;
-import eris.compiler.ast.VariableNode;
 import eris.compiler.type.ClassType;
 import eris.compiler.type.FunctionType;
 import eris.compiler.type.Type;
@@ -16,7 +15,7 @@ public class ClassSymbol extends TypeSymbol {
     public FunctionSymbol constructor;
 
     public ClassSymbol(String name, BuildModule module, int line, int column) {
-        super(name, module, line, column);
+        super(name, module, line, column, true);
         this.valueType = new ClassType(this);
     }
 
@@ -43,7 +42,7 @@ public class ClassSymbol extends TypeSymbol {
         }
 
         FunctionSymbol symbol = new FunctionSymbol(name + ".$constructor", module, line, column);
-        symbol.finalize(new FunctionType(parameterTypes, valueType), parameters);
+        symbol.setMeta(new FunctionType(parameterTypes, valueType), parameters);
         return symbol;
     }
 }

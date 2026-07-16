@@ -5,15 +5,15 @@ import eris.compiler.type.Type;
 
 public class VariableSymbol extends Symbol {
     private int slotIndex = -1;
-    private boolean isDeclared = false;
     private Type type;
 
     public VariableSymbol(String name, BuildModule module, int line, int column) {
-        super(name, module, line, column);
+        super(name, module, line, column, false);
     }
 
     public void setMeta(Type type) {
         this.type = type;
+        setActive();
     }
 
     public int getSlotIndex() {
@@ -27,15 +27,6 @@ public class VariableSymbol extends Symbol {
         this.slotIndex = slotIndex;
     }
 
-    public boolean isDeclared() {
-        return isDeclared;
-    }
-
-    public void setDeclared() {
-        assert !isDeclared;
-        isDeclared = true;
-    }
-
     public Type getType() {
         assert type != null;
         return type;
@@ -43,6 +34,6 @@ public class VariableSymbol extends Symbol {
 
     @Override
     public String toString() {
-        return String.format("<Variable %s>", name);
+        return String.format("<Variable %s : %s>", name, type);
     }
 }

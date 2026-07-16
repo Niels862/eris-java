@@ -10,10 +10,10 @@ public class FunctionSymbol extends Symbol {
     public List<VariableSymbol> parameters;
 
     public FunctionSymbol(String name, BuildModule module, int line, int column) {
-        super(name, module, line, column);
+        super(name, module, line, column, true);
     }
 
-    public void finalize(FunctionType type, List<VariableSymbol> parameters) {
+    public void setMeta(FunctionType type, List<VariableSymbol> parameters) {
         this.type = type;
         this.parameters = parameters;
     }
