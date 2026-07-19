@@ -140,7 +140,6 @@ public class FunctionCompiler {
 
         @Override
         public Void visit(Convert instruction) {
-            assert instruction.toType != null;
             return null;
         }
 

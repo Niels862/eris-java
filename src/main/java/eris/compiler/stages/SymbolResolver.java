@@ -2,6 +2,7 @@ package eris.compiler.stages;
 
 import eris.compiler.BuildModule;
 import eris.compiler.CompilerError;
+import eris.compiler.TypeContext;
 import eris.compiler.ast.*;
 import eris.compiler.symbol.*;
 import eris.compiler.type.FunctionType;
@@ -9,6 +10,7 @@ import eris.compiler.type.Type;
 import eris.compiler.type.TypeBuilder;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class SymbolResolver {
@@ -34,6 +36,14 @@ public class SymbolResolver {
             } else {
                 node.acceptChildren(this);
             }
+            return null;
+        }
+
+        @Override
+        public Void visit(ModuleNode node) throws CompilerError {
+            super.visit(node);
+
+            node.entrySymbol.setMeta(new FunctionType(Collections.emptyList(), TypeContext.instance.INT), Collections.emptyList());
             return null;
         }
 

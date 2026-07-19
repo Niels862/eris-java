@@ -1,8 +1,11 @@
 package eris.compiler;
 
+import eris.compiler.ast.ClassNode;
 import eris.compiler.ast.ModuleNode;
 import eris.compiler.ast.NodeWriter;
 import eris.compiler.stages.*;
+import eris.module.Module;
+import eris.module.Class;
 import eris.module.Function;
 
 import java.io.IOException;
@@ -57,21 +60,29 @@ public class BuildModule {
     }
 
     public Module compile() throws CompilerError {
-        List<BuildFunction> buildFunctions = generateBuildFunctions();
+        BuildFunctionGenerator generator = new BuildFunctionGenerator(this);
+        List<BuildFunction> buildFunctions = generator.generate(this.moduleNode);
 
         ConstantManager constantManager = new ConstantManager();
+
+        List<Class> classes = new ArrayList<>();
         List<Function> functions = new ArrayList<>();
+
+        for (ClassNode classNode : moduleNode.classes) {
+            classes.add(new Class(classNode.symbol.name));
+        }
+
+        int entryFunctionIndex = -1;
         for (BuildFunction buildFunction : buildFunctions) {
+            if (buildFunction.symbol == moduleNode.entrySymbol) {
+                entryFunctionIndex = functions.size();
+            }
+
             FunctionCompiler compiler = new FunctionCompiler(buildFunction, constantManager);
             functions.add(compiler.compile());
         }
 
-        return null;
-    }
-
-    private List<BuildFunction> generateBuildFunctions() throws CompilerError {
-        BuildFunctionGenerator generator = new BuildFunctionGenerator(this);
-        return generator.generate(this.moduleNode);
+        return new Module(name, classes, functions, constantManager.getConstants(), entryFunctionIndex);
     }
 
     public String toString() {

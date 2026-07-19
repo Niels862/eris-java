@@ -22,10 +22,12 @@ public class Compiler {
 
         List<Module> compiledModules = new ArrayList<>();
         try {
-            BuildModule module = manager.getBuildModule(this.entry);
-            module.parse();
-            module.analyze();
+            BuildModule buildModule = manager.getBuildModule(this.entry);
+            buildModule.parse();
+            buildModule.analyze();
+            Module module = buildModule.compile();
 
+            compiledModules.add(module);
         } catch (CompilerError e) {
             System.err.println(e.getMessage());
             return null;
