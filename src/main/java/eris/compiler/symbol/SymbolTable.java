@@ -1,6 +1,7 @@
 package eris.compiler.symbol;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class SymbolTable {
@@ -40,6 +41,12 @@ public class SymbolTable {
         assert !defines(name);
         assert !(lookup(name) instanceof TypeSymbol);
         symbols.put(name, symbol);
+    }
+
+    public <T extends Symbol> void insertAll(List<T> symbols) {
+        for (T symbol : symbols) {
+            insert(symbol.name, symbol);
+        }
     }
 
     public void setParent(SymbolTable parent) {

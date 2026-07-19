@@ -66,6 +66,10 @@ public abstract class NodeVisitor<T> {
         return defaultHandler(node);
     }
 
+    public T visit(MemberNode node) throws CompilerError {
+        return defaultHandler(node);
+    }
+
     public T visit(IdentifierNode node) throws CompilerError {
         return defaultHandler(node);
     }

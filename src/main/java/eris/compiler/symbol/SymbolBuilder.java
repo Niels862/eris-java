@@ -39,8 +39,8 @@ public class SymbolBuilder extends NodeVisitor<Symbol> {
         return build(node);
     }
 
-    public VariableSymbol build(ParameterNode node) throws CompilerError {
-        return new VariableSymbol(node.name, module, node.line, node.column);
+    public ValueSymbol build(ParameterNode node) throws CompilerError {
+        return new ValueSymbol(node.name, module, node.line, node.column);
     }
 
     @Override
@@ -48,7 +48,7 @@ public class SymbolBuilder extends NodeVisitor<Symbol> {
         return build(node);
     }
 
-    public VariableSymbol build(VariableNode node) throws CompilerError {
-        return new VariableSymbol(node.name, module, node.line, node.column);
+    public ValueSymbol build(VariableNode node) throws CompilerError {
+        return new ValueSymbol(node.name, module, node.line, node.column);
     }
 }

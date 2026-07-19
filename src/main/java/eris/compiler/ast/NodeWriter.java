@@ -115,6 +115,13 @@ public class NodeWriter extends NodeVisitor<Void> {
     }
 
     @Override
+    public Void visit(MemberNode node) throws CompilerError {
+        write("object", node.object);
+        write("member", node.member);
+        return null;
+    }
+
+    @Override
     public Void visit(IdentifierNode node) throws CompilerError {
         write("name", node.name);
         write("symbol", node.symbol);

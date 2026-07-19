@@ -4,14 +4,11 @@ import eris.compiler.BuildModule;
 import eris.compiler.CompilerError;
 import eris.compiler.TypeContext;
 import eris.compiler.ast.*;
-import eris.compiler.symbol.ClassSymbol;
-import eris.compiler.symbol.FunctionSymbol;
-import eris.compiler.symbol.Symbol;
-import eris.compiler.symbol.VariableSymbol;
+import eris.compiler.symbol.*;
+import eris.compiler.type.ClassValueType;
 import eris.compiler.type.FunctionType;
 import eris.compiler.type.Type;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class TypeChecker extends NodeVisitor<Void> {
@@ -116,10 +113,45 @@ public class TypeChecker extends NodeVisitor<Void> {
     }
 
     @Override
+    public Void visit(MemberNode node) throws CompilerError {
+        node.acceptChildren(this);
+
+        Type objectType = node.object.getInferredType();
+        if (objectType instanceof ClassValueType classValueType) {
+            Symbol memberSymbol = classValueType.symbol.symbolTable.lookup(node.member);
+
+            if (memberSymbol != null) {
+                Type type;
+                switch (memberSymbol) {
+                    case ValueSymbol valueSymbol -> {
+                        type = valueSymbol.type;
+                    }
+
+                    case FunctionSymbol functionSymbol -> {
+                        type = functionSymbol.type;
+                    }
+
+                    default -> {
+                        throw new UnsupportedOperationException("Unknown member type: " + memberSymbol);
+                    }
+                }
+
+                node.setInferredType(type);
+            } else {
+                throw node.error(module, String.format("`%s` value has no attribute '%s'", objectType, node.member));
+            }
+        } else {
+            throw node.error(module, String.format("Cannot access member of `%s` value", objectType));
+        }
+
+        return null;
+    }
+
+    @Override
     public Void visit(IdentifierNode node) throws CompilerError {
         switch (node.symbol) {
-            case VariableSymbol variableSymbol -> {
-                node.setInferredType(variableSymbol.type);
+            case ValueSymbol valueSymbol -> {
+                node.setInferredType(valueSymbol.type);
             }
 
             case FunctionSymbol functionSymbol -> {

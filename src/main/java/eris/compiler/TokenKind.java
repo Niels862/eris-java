@@ -8,6 +8,7 @@ public enum TokenKind {
     RBRACKET("]"),
     LBRACE("{"),
     RBRACE("}"),
+    PERIOD("."),
     COMMA(","),
     SEMICOLON(";"),
     COLON(":"),

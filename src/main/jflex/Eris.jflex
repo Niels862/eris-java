@@ -56,6 +56,7 @@ InvalidIntegerLiteral = -? [0-9][A-Za-z0-9_]*
   "]"                       { return token(TokenKind.RBRACKET); }
   "{"                       { return token(TokenKind.LBRACE); }
   "}"                       { return token(TokenKind.RBRACE); }
+  "."                       { return token(TokenKind.PERIOD); }
   ","                       { return token(TokenKind.COMMA); }
   ";"                       { return token(TokenKind.SEMICOLON); }
   ":"                       { return token(TokenKind.COLON); }

@@ -10,7 +10,8 @@ import java.util.List;
 
 public class ClassSymbol extends TypeSymbol {
     public final ClassValueType valueType;
-    public List<VariableSymbol> attributes;
+    public List<ValueSymbol> attributes;
+    public SymbolTable symbolTable;
     public FunctionSymbol constructor;
 
     public ClassSymbol(String name, BuildModule module, int line, int column) {
@@ -18,8 +19,9 @@ public class ClassSymbol extends TypeSymbol {
         this.valueType = new ClassValueType(this);
     }
 
-    public void setMeta(List<VariableSymbol> attributes) {
+    public void setMeta(List<ValueSymbol> attributes, SymbolTable symbolTable) {
         this.attributes = attributes;
+        this.symbolTable = symbolTable;
         this.constructor = makeDefaultConstructor();
     }
 
@@ -29,11 +31,11 @@ public class ClassSymbol extends TypeSymbol {
     }
 
     private FunctionSymbol makeDefaultConstructor() {
-        List<VariableSymbol> parameters = new ArrayList<>();
-        parameters.add(new VariableSymbol("this", module, line, column));
+        List<ValueSymbol> parameters = new ArrayList<>();
+        parameters.add(new ValueSymbol("this", module, line, column));
 
         List<Type> parameterTypes = new ArrayList<>();
-        for (VariableSymbol attribute : attributes) {
+        for (ValueSymbol attribute : attributes) {
             parameters.add(attribute);
             parameterTypes.add(attribute.type);
         }

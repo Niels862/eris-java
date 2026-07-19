@@ -7,7 +7,6 @@ import java.util.Stack;
 
 public class ScopeHandler {
     private final Stack<SymbolTable> enteredScopes = new Stack<>();
-
     private static final SymbolTable nullTable = new SymbolTable();
 
     public void enterScope(SymbolTable symbolTable) {

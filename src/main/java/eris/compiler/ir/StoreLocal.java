@@ -1,15 +1,15 @@
 package eris.compiler.ir;
 
 import eris.compiler.CompilerError;
-import eris.compiler.symbol.VariableSymbol;
+import eris.compiler.symbol.ValueSymbol;
 
 public class StoreLocal extends IntermediateInstruction {
-    public final VariableSymbol symbol;
+    public final ValueSymbol symbol;
     public final boolean isInitializingAssignment;
 
     public Convert converter;
 
-    public StoreLocal(VariableSymbol symbol, boolean isInitializingAssignment, Convert converter) {
+    public StoreLocal(ValueSymbol symbol, boolean isInitializingAssignment, Convert converter) {
         this.symbol = symbol;
         this.isInitializingAssignment = isInitializingAssignment;
         this.converter = converter;

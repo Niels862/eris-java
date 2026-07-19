@@ -3,7 +3,7 @@ package eris.compiler.stages;
 import eris.compiler.BuildFunction;
 import eris.compiler.CompilerError;
 import eris.compiler.ir.*;
-import eris.compiler.symbol.VariableSymbol;
+import eris.compiler.symbol.ValueSymbol;
 import eris.module.Function;
 import eris.module.Instruction;
 import eris.module.OpCode;
@@ -21,6 +21,7 @@ public class FunctionCompiler {
     private final ConstantManager constants;
 
     private final List<Instruction> code = new ArrayList<>();
+    private final Map<ValueSymbol, Integer> slotIndexes = new HashMap<>();
 
     private BasicBlock nextBlock;
 
@@ -31,11 +32,13 @@ public class FunctionCompiler {
 
     public Function compile() {
         int slotIndex = 0;
-        for (VariableSymbol parameter : function.parameters) {
-            parameter.setSlotIndex(slotIndex++);
+        for (ValueSymbol parameter : function.parameters) {
+            slotIndexes.put(parameter, slotIndex);
+            slotIndex++;
         }
-        for (VariableSymbol local : function.locals) {
-            local.setSlotIndex(slotIndex++);
+        for (ValueSymbol local : function.locals) {
+            slotIndexes.put(local, slotIndex);
+            slotIndex++;
         }
 
         // First BLOCK is entry block. Last BLOCK is exit block which should not be referenced after semantic analysis
@@ -107,13 +110,13 @@ public class FunctionCompiler {
 
         @Override
         public Void visit(LoadLocal instruction) {
-            emit(OpCode.LOAD_LOCAL, instruction.symbol.getSlotIndex());
+            emit(OpCode.LOAD_LOCAL, slotIndexes.get(instruction.symbol));
             return null;
         }
 
         @Override
         public Void visit(StoreLocal instruction) {
-            emit(OpCode.STORE_LOCAL, instruction.symbol.getSlotIndex());
+            emit(OpCode.STORE_LOCAL, slotIndexes.get(instruction.symbol));
             return null;
         }
 

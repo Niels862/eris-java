@@ -2,13 +2,13 @@ package eris.compiler.ast;
 
 import eris.compiler.CompilerError;
 import eris.compiler.Token;
-import eris.compiler.symbol.VariableSymbol;
+import eris.compiler.symbol.ValueSymbol;
 
 public class ParameterNode extends Node implements DeclarationNode {
     public final String name;
     public final TypeNode type;
 
-    public VariableSymbol symbol;
+    public ValueSymbol symbol;
 
     public ParameterNode(Token token, String name, TypeNode type) {
         super(token);
@@ -26,7 +26,7 @@ public class ParameterNode extends Node implements DeclarationNode {
     }
 
     @Override
-    public VariableSymbol getSymbol() {
+    public ValueSymbol getSymbol() {
         return symbol;
     }
 }

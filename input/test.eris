@@ -7,7 +7,7 @@ func make_point(x: int, y: int) -> Point {
     return Point(x, y);
 }
 
-func main() -> Point {
+func main() -> int {
     point: Point = make_point(3, 5);
-    return point;
+    return point.x;
 }

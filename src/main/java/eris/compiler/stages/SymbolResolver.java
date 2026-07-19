@@ -5,6 +5,7 @@ import eris.compiler.CompilerError;
 import eris.compiler.TypeContext;
 import eris.compiler.ast.*;
 import eris.compiler.symbol.*;
+import eris.compiler.symbol.ValueSymbol.Scope;
 import eris.compiler.type.FunctionType;
 import eris.compiler.type.Type;
 import eris.compiler.type.TypeBuilder;
@@ -19,6 +20,9 @@ public class SymbolResolver {
     private final ScopeHandler scopeHandler = new ScopeHandler();
     private final NodeHandler nodeHandler = new NodeHandler();
     private final TypeBuilder typeBuilder = new TypeBuilder();
+
+    private ClassNode currentClass;
+    private FunctionNode currentFunction;
 
     public SymbolResolver(BuildModule module) {
         this.module = module;
@@ -49,23 +53,31 @@ public class SymbolResolver {
 
         @Override
         public Void visit(ClassNode node) throws CompilerError {
+            assert currentClass == null;
+            currentClass = node;
+
             super.visit(node);
 
-            List<VariableSymbol> attributes = new ArrayList<>();
+            List<ValueSymbol> attributes = new ArrayList<>();
             for (VariableNode attribute : node.attributes) {
                 attributes.add(attribute.symbol);
             }
 
-            node.symbol.setMeta(attributes);
+            node.symbol.setMeta(attributes, node.scope);
+
+            currentClass = null;
             return null;
         }
 
         @Override
         public Void visit(FunctionNode node) throws CompilerError {
+            assert currentFunction == null;
+            currentFunction = node;
+
             super.visit(node);
 
             List<Type> parameterTypes = new ArrayList<>();
-            List<VariableSymbol> parameters = new ArrayList<>();
+            List<ValueSymbol> parameters = new ArrayList<>();
             for (ParameterNode parameter : node.parameters) {
                 assert parameter.symbol.type != null;
                 parameterTypes.add(parameter.symbol.type);
@@ -76,6 +88,8 @@ public class SymbolResolver {
             FunctionType type = new FunctionType(parameterTypes, returnType);
 
             node.symbol.setMeta(type, parameters);
+
+            currentFunction = null;
             return null;
         }
 
@@ -83,7 +97,7 @@ public class SymbolResolver {
         public Void visit(ParameterNode node) throws CompilerError {
             super.visit(node);
             Type type = typeBuilder.build(node.type);
-            node.symbol.setMeta(type);
+            node.symbol.setMeta(type, Scope.Local);
             return null;
         }
 
@@ -92,7 +106,17 @@ public class SymbolResolver {
             super.visit(node);
             if (node.type != null) {
                 Type type = typeBuilder.build(node.type);
-                node.symbol.setMeta(type);
+
+                Scope scope;
+                if (currentFunction != null) {
+                    scope = Scope.Local;
+                } else if (currentClass != null) {
+                    scope = Scope.Member;
+                } else {
+                    scope = Scope.Global;
+                }
+
+                node.symbol.setMeta(type, scope);
             } else {
                 throw new UnsupportedOperationException();
             }

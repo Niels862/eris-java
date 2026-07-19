@@ -7,13 +7,13 @@ import java.util.List;
 
 public class FunctionSymbol extends Symbol {
     public FunctionType type;
-    public List<VariableSymbol> parameters;
+    public List<ValueSymbol> parameters;
 
     public FunctionSymbol(String name, BuildModule module, int line, int column) {
         super(name, module, line, column, true);
     }
 
-    public void setMeta(FunctionType type, List<VariableSymbol> parameters) {
+    public void setMeta(FunctionType type, List<ValueSymbol> parameters) {
         this.type = type;
         this.parameters = parameters;
     }

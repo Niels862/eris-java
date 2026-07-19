@@ -1,12 +1,12 @@
 package eris.compiler.ir;
 
 import eris.compiler.CompilerError;
-import eris.compiler.symbol.VariableSymbol;
+import eris.compiler.symbol.ValueSymbol;
 
 public class LoadLocal extends IntermediateInstruction {
-    public final VariableSymbol symbol;
+    public final ValueSymbol symbol;
 
-    public LoadLocal(VariableSymbol symbol) {
+    public LoadLocal(ValueSymbol symbol) {
         this.symbol = symbol;
     }
 

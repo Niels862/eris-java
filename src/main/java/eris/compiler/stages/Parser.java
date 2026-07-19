@@ -243,6 +243,9 @@ public class Parser {
             if (matches(TokenKind.LPAREN)) {
                 List<ExpressionNode> arguments = parseArguments();
                 expression = new CallNode(token, expression, arguments);
+            } else if (accept(TokenKind.PERIOD) != null) {
+                Token member = expect(TokenKind.IDENTIFIER);
+                expression = new MemberNode(token, expression, member.text);
             } else {
                 return expression;
             }

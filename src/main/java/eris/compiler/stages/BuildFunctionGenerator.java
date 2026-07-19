@@ -23,8 +23,8 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
 
     private List<BasicBlock> blocks;
     private BasicBlock block;
-    private List<VariableSymbol> locals;
-    private List<VariableSymbol> parameters;
+    private List<ValueSymbol> locals;
+    private List<ValueSymbol> parameters;
     private int nextBlockId;
 
     private Node currentNode;
@@ -101,7 +101,7 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
     @Override
     public Void visit(ClassNode node) throws CompilerError {
         setSymbol(node.symbol.constructor);
-        VariableSymbol thisSymbol = parameters.getFirst();
+        ValueSymbol thisSymbol = parameters.getFirst();
         emit(new LoadLocal(thisSymbol));
         emit(new Return());
         return null;
@@ -303,7 +303,7 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
                         emitFunctionCall(classSymbol.constructor, node.arguments);
                     }
 
-                    case VariableSymbol _ -> {
+                    case ValueSymbol _ -> {
                         emitIndirectFunctionCall(node.function, node.arguments);
                     }
 
@@ -331,8 +331,8 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
 
         @Override
         public Void visit(IdentifierNode node) {
-            if (node.symbol instanceof VariableSymbol variableSymbol) {
-                emit(new LoadLocal(variableSymbol));
+            if (node.symbol instanceof ValueSymbol valueSymbol) {
+                emit(new LoadLocal(valueSymbol));
             } else {
                 throw new UnsupportedOperationException();
             }
@@ -379,8 +379,8 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
 
         @Override
         public Void visit(IdentifierNode node) {
-            if (node.symbol instanceof VariableSymbol variableSymbol) {
-                emit(new StoreLocal(variableSymbol, false, converter));
+            if (node.symbol instanceof ValueSymbol valueSymbol) {
+                emit(new StoreLocal(valueSymbol, false, converter));
                 converter.toType = null;
             } else {
                 throw new UnsupportedOperationException();
