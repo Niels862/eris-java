@@ -7,7 +7,6 @@ import eris.compiler.TypeContext;
 import eris.compiler.ast.*;
 import eris.compiler.ir.*;
 import eris.compiler.symbol.*;
-import eris.compiler.type.FunctionType;
 
 import java.util.*;
 
@@ -16,7 +15,6 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
 
     private final Queue<Task> taskQueue = new ArrayDeque<>();
     private FunctionSymbol symbol;
-    private final ScopeHandler scopeHandler = new ScopeHandler();
     private final TypeContext context = TypeContext.instance;
 
     private final StatementGenerator statementGenerator = new StatementGenerator();
@@ -38,7 +36,7 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
     public List<BuildFunction> generate(ModuleNode moduleNode) throws CompilerError {
         List<BuildFunction> functions = new ArrayList<>();
 
-        taskQueue.add(new Task(moduleNode, null));
+        taskQueue.add(new Task(moduleNode));
         while (!taskQueue.isEmpty()) {
             Task task = taskQueue.remove();
             BuildFunction function = buildTask(task);
@@ -49,13 +47,13 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
     }
 
     private BuildFunction buildTask(Task task) throws CompilerError {
-        buildTaskPrologue(task);
+        buildTaskPrologue();
         task.node.accept(this);
-        buildTaskEpilogue(task);
+        buildTaskEpilogue();
         return new BuildFunction(task.node, symbol, blocks, parameters, locals);
     }
 
-    private void buildTaskPrologue(Task task) throws CompilerError {
+    private void buildTaskPrologue() {
         symbol = null;
         nextBlockId = 0;
         blocks = new ArrayList<>();
@@ -63,20 +61,13 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         locals = new ArrayList<>();
         parameters = new ArrayList<>();
         blocks.add(block);
-
-        if (task.enclosing != null) {
-            scopeHandler.enterScope(task.enclosing);
-        }
     }
 
-    private void buildTaskEpilogue(Task task) throws CompilerError {
+    private void buildTaskEpilogue() {
         addBlock(makeBlock());
         emit(new Fallthrough());
 
         assert symbol != null;
-        if (task.enclosing != null) {
-            scopeHandler.leaveScope(task.enclosing);
-        }
     }
 
     private void setSymbol(FunctionSymbol symbol) {
@@ -87,9 +78,8 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
     @Override
     public Void visit(ModuleNode node) throws CompilerError {
         setSymbol(node.entrySymbol);
-        scopeHandler.enterScope(node.globalScope);
 
-        Symbol mainSymbol = scopeHandler.getSymbolTable().lookup("main");
+        Symbol mainSymbol = node.globalScope.lookup("main");
         if (mainSymbol instanceof FunctionSymbol mainFunctionSymbol) {
             emit(new Call(mainFunctionSymbol));
             emit(new Halt());
@@ -105,7 +95,6 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
             functionNode.accept(statementGenerator);
         }
 
-        scopeHandler.leaveScope(node.globalScope);
         return null;
     }
 
@@ -121,32 +110,16 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
     @Override
     public Void visit(FunctionNode node) throws CompilerError {
         setSymbol(node.symbol);
-        scopeHandler.enterScope(node.scope);
 
         for (StatementNode statement : node.statements) {
             statementGenerator.generate(statement);
         }
 
-        scopeHandler.leaveScope(node.scope);
         return null;
     }
 
     private void addTask(Node node) {
-        taskQueue.add(new Task(node, scopeHandler.getSymbolTable()));
-    }
-
-    public VariableSymbol lookupVariableSymbol(Node node, String name) throws CompilerError {
-        Symbol symbol = scopeHandler.getSymbolTable().lookup(name);
-
-        System.out.println(symbol + " " + name + " " + scopeHandler.getSymbolTable());
-
-        if (symbol instanceof VariableSymbol variableSymbol) {
-            return variableSymbol;
-        } else if (symbol == null) {
-            throw new CompilerError(module, node.line, node.column, name + " is not declared in this scope");
-        } else {
-            throw new UnsupportedOperationException();
-        }
+        taskQueue.add(new Task(node));
     }
 
     public <T extends IntermediateInstruction> T emit(T instruction) {
@@ -186,7 +159,7 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
 
     private class StatementGenerator extends Generator {
         @Override
-        public Void visit(ClassNode node) throws CompilerError {
+        public Void visit(ClassNode node) {
             addTask(node);
             return null;
         }
@@ -218,7 +191,6 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
 
         @Override
         public Void visit(IfElseStatementNode node) throws CompilerError {
-            scopeHandler.enterScope(node.thenScope);
             expressionGenerator.generate(node.condition);
             emit(new Convert(context.BOOL));
 
@@ -233,44 +205,37 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
             }
             emit(new Jump(exitBlock));
 
-            scopeHandler.leaveScope(node.thenScope);
-            scopeHandler.enterScope(node.elseScope);
-
             addBlock(elseBlock);
             for (StatementNode statement : node.elseBody) {
                 statementGenerator.generate(statement);
             }
             addBlock(exitBlock);
 
-            scopeHandler.leaveScope(node.elseScope);
             return null;
         }
 
         @Override
         public Void visit(WhileStatementNode node) throws CompilerError {
-            emitConditionalLoop(node.scope, node.condition, node.body, false);
+            emitConditionalLoop(node.condition, node.body, false);
             return null;
         }
 
         @Override
         public Void visit(DoWhileStatementNode node) throws CompilerError {
-            emitConditionalLoop(node.scope, node.condition, node.body, true);
+            emitConditionalLoop(node.condition, node.body, true);
             return null;
         }
 
         @Override
         public Void visit(LoopStatementNode node) throws CompilerError {
-            emitConditionalLoop(node.scope, null, node.body, false);
+            emitConditionalLoop(null, node.body, false);
             return null;
         }
 
         private void emitConditionalLoop(
-                SymbolTable scope,
                 ExpressionNode condition,
                 List<StatementNode> body,
                 boolean isDoWhile) throws CompilerError {
-            scopeHandler.enterScope(scope);
-
             BasicBlock loopBlock = makeBlock();
             BasicBlock nextBlock = makeBlock();
             BasicBlock exitBlock = makeBlock();
@@ -294,8 +259,6 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
             }
 
             addBlock(exitBlock);
-
-            scopeHandler.leaveScope(scope);
         }
 
         @Override
@@ -330,19 +293,17 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         @Override
         public Void visit(CallNode node) throws CompilerError {
             if (node.function instanceof IdentifierNode identifier) {
-                Symbol symbol = scopeHandler.getSymbolTable().lookup(identifier.name);
-
-                switch (symbol) {
+                switch (identifier.symbol) {
                     case FunctionSymbol functionSymbol -> {
-                        emitFunctionCall(functionSymbol, identifier, node.arguments);
+                        emitFunctionCall(functionSymbol, node.arguments);
                     }
 
                     case ClassSymbol classSymbol -> {
                         emit(new New(classSymbol));
-                        emitFunctionCall(classSymbol.constructor, identifier, node.arguments);
+                        emitFunctionCall(classSymbol.constructor, node.arguments);
                     }
 
-                    case VariableSymbol variableSymbol -> {
+                    case VariableSymbol _ -> {
                         emitIndirectFunctionCall(node.function, node.arguments);
                     }
 
@@ -357,7 +318,6 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
 
         private void emitFunctionCall(
                 FunctionSymbol functionSymbol,
-                IdentifierNode function,
                 List<ExpressionNode> arguments) throws CompilerError {
             for (ExpressionNode argument : arguments) {
                 expressionGenerator.generate(argument);
@@ -365,14 +325,17 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
             emit(new Call(functionSymbol));
         }
 
-        private void emitIndirectFunctionCall(ExpressionNode function, List<ExpressionNode> arguments) throws CompilerError {
+        private void emitIndirectFunctionCall(ExpressionNode function, List<ExpressionNode> arguments) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public Void visit(IdentifierNode node) throws CompilerError {
-            VariableSymbol symbol = lookupVariableSymbol(node, node.name);
-            emit(new LoadLocal(symbol));
+        public Void visit(IdentifierNode node) {
+            if (node.symbol instanceof VariableSymbol variableSymbol) {
+                emit(new LoadLocal(variableSymbol));
+            } else {
+                throw new UnsupportedOperationException();
+            }
             return null;
         }
 
@@ -383,19 +346,19 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         }
 
         @Override
-        public Void visit(BooleanLiteralNode node) throws CompilerError {
+        public Void visit(BooleanLiteralNode node) {
             emit(new LoadConstant(node.value));
             return null;
         }
 
         @Override
-        public Void visit(StringLiteralNode node) throws CompilerError {
+        public Void visit(StringLiteralNode node) {
             emit(new LoadConstant(node.value));
             return null;
         }
 
         @Override
-        public Void visit(NullLiteralNode node) throws CompilerError {
+        public Void visit(NullLiteralNode node) {
             emit(new LoadNull());
             return null;
         }
@@ -415,16 +378,18 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         }
 
         @Override
-        public Void visit(IdentifierNode node) throws CompilerError {
-            VariableSymbol symbol = lookupVariableSymbol(node, node.name);
-            emit(new StoreLocal(symbol, false, converter));
-            converter.toType = null;
+        public Void visit(IdentifierNode node) {
+            if (node.symbol instanceof VariableSymbol variableSymbol) {
+                emit(new StoreLocal(variableSymbol, false, converter));
+                converter.toType = null;
+            } else {
+                throw new UnsupportedOperationException();
+            }
             return null;
         }
     }
 
     private record Task(
-            Node node,
-            SymbolTable enclosing
+            Node node
     ) {}
 }
