@@ -251,6 +251,11 @@ public class Parser {
 
     private ExpressionNode parseAtom() throws CompilerError {
         Token token = getToken();
+        if (accept(TokenKind.LPAREN) != null) {
+            ExpressionNode expression = parseExpression();
+            expect(TokenKind.RPAREN);
+            return expression;
+        }
         if (accept(TokenKind.IDENTIFIER) != null) {
             return new IdentifierNode(token, token.text);
         }

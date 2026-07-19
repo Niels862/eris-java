@@ -215,6 +215,11 @@ public class NodeWriter extends NodeVisitor<Void> {
         if (node instanceof DeclarationNode declarationNode) {
             s += " declares " + declarationNode.getSymbol();
         }
+        if (node instanceof ExpressionNode expressionNode) {
+            if (expressionNode.hasInferredType()) {
+                s += " inferred as " + expressionNode.getInferredType();
+            }
+        }
         write(s);
     }
 }

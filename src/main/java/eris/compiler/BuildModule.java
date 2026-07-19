@@ -56,6 +56,9 @@ public class BuildModule {
         SymbolResolver resolver = new SymbolResolver(this);
         resolver.resolveSymbols();
 
+        TypeChecker checker = new TypeChecker(this);
+        checker.check();
+
         new NodeWriter().write(moduleNode);
     }
 

@@ -67,7 +67,8 @@ public class SymbolResolver {
             List<Type> parameterTypes = new ArrayList<>();
             List<VariableSymbol> parameters = new ArrayList<>();
             for (ParameterNode parameter : node.parameters) {
-                parameterTypes.add(parameter.symbol.getType());
+                assert parameter.symbol.type != null;
+                parameterTypes.add(parameter.symbol.type);
                 parameters.add(parameter.symbol);
             }
 

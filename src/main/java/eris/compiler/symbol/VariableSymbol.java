@@ -5,7 +5,7 @@ import eris.compiler.type.Type;
 
 public class VariableSymbol extends Symbol {
     private int slotIndex = -1;
-    private Type type;
+    public Type type;
 
     public VariableSymbol(String name, BuildModule module, int line, int column) {
         super(name, module, line, column, false);
@@ -25,11 +25,6 @@ public class VariableSymbol extends Symbol {
         assert slotIndex >= 0;
         assert this.slotIndex == -1;
         this.slotIndex = slotIndex;
-    }
-
-    public Type getType() {
-        assert type != null;
-        return type;
     }
 
     @Override

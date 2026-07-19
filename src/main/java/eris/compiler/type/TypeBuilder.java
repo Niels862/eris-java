@@ -15,7 +15,7 @@ public class TypeBuilder extends NodeVisitor<Type> {
     @Override
     public Type visit(NamedTypeNode node) throws CompilerError {
         if (node.symbol instanceof ClassSymbol classSymbol) {
-            return new ClassType(classSymbol);
+            return classSymbol.valueType;
         }
 
         throw new RuntimeException(String.format("Illegal symbol type: %s", node.symbol));

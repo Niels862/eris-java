@@ -1,6 +1,6 @@
 package eris.compiler.type;
 
-public class NullableType extends Type {
+public class NullableType extends ValueType {
     public final Type type;
 
     public NullableType(Type type) {
@@ -14,8 +14,8 @@ public class NullableType extends Type {
         }
 
         String inner;
-        if (type instanceof ClassType classType) {
-            inner = classType.toString();
+        if (type instanceof ClassValueType classValueType) {
+            inner = classValueType.toString();
         } else {
             inner = "(" + type.toString() + ")";
         }

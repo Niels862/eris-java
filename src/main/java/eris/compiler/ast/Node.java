@@ -1,5 +1,6 @@
 package eris.compiler.ast;
 
+import eris.compiler.BuildModule;
 import eris.compiler.CompilerError;
 import eris.compiler.Token;
 
@@ -15,6 +16,10 @@ public abstract class Node {
     public abstract <T> T accept(NodeVisitor<T> visitor) throws CompilerError;
 
     public abstract <T> void acceptChildren(NodeVisitor<T> visitor) throws CompilerError;
+
+    public CompilerError error(BuildModule module, String message) {
+        return new CompilerError(module, line, column, message);
+    }
 
     public String toString() {
         return String.format("<%s>", getClass().getSimpleName());
