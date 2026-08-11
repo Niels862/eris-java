@@ -1,6 +1,7 @@
 package eris.compiler.stages;
 
 import eris.compiler.BuildModule;
+import eris.compiler.Interner;
 import eris.compiler.symbol.ClassSymbol;
 import eris.compiler.symbol.FunctionSymbol;
 import eris.module.constant.*;
@@ -13,6 +14,27 @@ import java.util.Map;
 public class ConstantManager {
     private final List<Constant> constants = new ArrayList<>();
 
+    public final Interner<Integer, IntegerConstant> integers = new Interner<>(IntegerConstant::new, this::add);
+
+    public final Interner<String, StringConstant> strings = new Interner<>(StringConstant::new, this::add);
+
+    public final Interner<BuildModule, ModuleReferenceConstant> modules = new Interner<>(key -> {
+        StringConstant name = strings.get(key.name);
+        return new ModuleReferenceConstant(name);
+    }, this::add);
+
+    public final Interner<ClassSymbol, ClassReferenceConstant> classes = new Interner<>(key -> {
+        ModuleReferenceConstant module = modules.get(key.getModule());
+        StringConstant name = strings.get(key.name);
+        return new ClassReferenceConstant(module, name);
+    }, this::add);
+
+    public final Interner<FunctionSymbol, FunctionReferenceConstant> functions = new Interner<>(key -> {
+        ModuleReferenceConstant module = modules.get(key.getModule());
+        StringConstant name = strings.get(key.name);
+        return new FunctionReferenceConstant(module, name);
+    }, this::add);
+
     private final Map<BuildModule, ModuleReferenceConstant> moduleReferenceConstants = new HashMap<>();
     private final Map<ClassSymbol, ClassReferenceConstant> classReferenceConstants = new HashMap<>();
     private final Map<FunctionSymbol, FunctionReferenceConstant> functionReferenceConstants = new HashMap<>();
@@ -20,56 +42,6 @@ public class ConstantManager {
     private final Map<String, StringConstant> stringConstants = new HashMap<>();
 
     private final Map<Constant, Integer> invertedIndexMap = new HashMap<>();
-
-    public ModuleReferenceConstant getModuleReferenceConstant(BuildModule module) {
-        ModuleReferenceConstant constant = moduleReferenceConstants.get(module);
-        if (constant == null) {
-            StringConstant nameConstant = getStringConstant(module.name);
-            constant = new ModuleReferenceConstant(nameConstant);
-            insert(constant, module, moduleReferenceConstants);
-        }
-        return constant;
-    }
-
-    public ClassReferenceConstant getClassReferenceConstant(ClassSymbol clazz) {
-        ClassReferenceConstant constant = classReferenceConstants.get(clazz);
-        if (constant == null) {
-            ModuleReferenceConstant moduleReference = getModuleReferenceConstant(clazz.getModule());
-            StringConstant nameConstant = getStringConstant(clazz.name);
-            constant = new ClassReferenceConstant(moduleReference, nameConstant);
-            insert(constant, clazz, classReferenceConstants);
-        }
-        return constant;
-    }
-
-    public FunctionReferenceConstant getFunctionReferenceConstant(FunctionSymbol function) {
-        FunctionReferenceConstant constant = functionReferenceConstants.get(function);
-        if (constant == null) {
-            ModuleReferenceConstant moduleReference = getModuleReferenceConstant(function.getModule());
-            StringConstant nameConstant = getStringConstant(function.name);
-            constant = new FunctionReferenceConstant(moduleReference, nameConstant);
-            insert(constant, function, functionReferenceConstants);
-        }
-        return constant;
-    }
-
-    public IntegerConstant getIntegerConstant(int value) {
-        IntegerConstant constant = integerConstants.get(value);
-        if (constant == null) {
-            constant = new IntegerConstant(value);
-            insert(constant, value, integerConstants);
-        }
-        return constant;
-    }
-
-    public StringConstant getStringConstant(String value) {
-        StringConstant constant = stringConstants.get(value);
-        if (constant == null) {
-            constant = new StringConstant(value);
-            insert(constant, value, stringConstants);
-        }
-        return constant;
-    }
 
     public int getIndexOf(Constant constant) {
         assert constants.indexOf(constant) == invertedIndexMap.get(constant);
@@ -80,8 +52,7 @@ public class ConstantManager {
         return constants;
     }
 
-    private <T extends Constant, U> void insert(T constant, U key, Map<U, T> map) {
-        map.put(key, constant);
+    private <V extends Constant> void add(V constant) {
         int index = constants.size();
         constants.add(constant);
         invertedIndexMap.put(constant, index);

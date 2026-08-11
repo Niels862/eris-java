@@ -86,13 +86,13 @@ public class FunctionCompiler {
         public Void visit(LoadConstant instruction) {
             Constant constant = switch (instruction.constant) {
                 case Integer integerConstant
-                        -> constants.getIntegerConstant(integerConstant);
+                        -> constants.integers.get(integerConstant);
 
                 case Boolean booleanConstant
-                        -> constants.getIntegerConstant(booleanConstant ? 1 : 0);
+                        -> constants.integers.get(booleanConstant ? 1 : 0);
 
                 case String stringConstant
-                        -> constants.getStringConstant(stringConstant);
+                        -> constants.strings.get(stringConstant);
 
                 case null, default
                         -> throw new RuntimeException("Unexpected constant type: " + instruction.constant);
@@ -168,15 +168,15 @@ public class FunctionCompiler {
         }
 
         @Override
-        public Void visit(New instruction) throws CompilerError {
-            ClassReferenceConstant constant = constants.getClassReferenceConstant(instruction.clazz);
+        public Void visit(New instruction) {
+            ClassReferenceConstant constant = constants.classes.get(instruction.clazz);
             emit(OpCode.NEW, constants.getIndexOf(constant));
             return null;
         }
 
         @Override
         public Void visit(Call instruction) {
-            FunctionReferenceConstant constant = constants.getFunctionReferenceConstant(instruction.function);
+            FunctionReferenceConstant constant = constants.functions.get(instruction.function);
             emit(OpCode.CALL, constants.getIndexOf(constant));
             return null;
         }

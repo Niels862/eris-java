@@ -330,6 +330,23 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
         }
 
         @Override
+        public Void visit(MemberNode node) throws CompilerError {
+            expressionGenerator.generate(node.object);
+
+            switch (node.symbol) {
+                case ValueSymbol valueSymbol -> {
+                    emit(new LoadAttribute(valueSymbol));
+                }
+
+                default -> {
+                    throw new IllegalStateException("Unexpected value: " + symbol);
+                }
+            }
+
+            return null;
+        }
+
+        @Override
         public Void visit(IdentifierNode node) {
             if (node.symbol instanceof ValueSymbol valueSymbol) {
                 emit(new LoadLocal(valueSymbol));

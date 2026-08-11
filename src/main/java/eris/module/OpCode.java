@@ -8,6 +8,9 @@ public enum OpCode {
     POP,
     DUP,
 
+    LOAD_ATTR(Format.INTEGER),
+    STORE_ATTR(Format.INTEGER),
+
     NEW(Format.INTEGER),
 
     EQ,

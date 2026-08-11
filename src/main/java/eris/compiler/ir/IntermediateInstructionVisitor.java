@@ -24,6 +24,14 @@ public abstract class IntermediateInstructionVisitor<T> {
         return defaultHandler(instruction);
     }
 
+    public T visit(LoadAttribute instruction) throws CompilerError {
+        return defaultHandler(instruction);
+    }
+
+    public T visit(StoreAttribute instruction) throws CompilerError {
+        return defaultHandler(instruction);
+    }
+
     public T visit(Pop instruction) throws CompilerError {
         return defaultHandler(instruction);
     }

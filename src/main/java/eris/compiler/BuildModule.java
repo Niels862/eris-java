@@ -77,6 +77,8 @@ public class BuildModule {
 
         int entryFunctionIndex = -1;
         for (BuildFunction buildFunction : buildFunctions) {
+            buildFunction.dump();
+
             if (buildFunction.symbol == moduleNode.entrySymbol) {
                 entryFunctionIndex = functions.size();
             }

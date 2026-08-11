@@ -137,6 +137,7 @@ public class TypeChecker extends NodeVisitor<Void> {
                 }
 
                 node.setInferredType(type);
+                node.symbol = memberSymbol;
             } else {
                 throw node.error(module, String.format("`%s` value has no attribute '%s'", objectType, node.member));
             }
