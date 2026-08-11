@@ -2,9 +2,10 @@ package eris.compiler.ast;
 
 import eris.compiler.CompilerError;
 import eris.compiler.Token;
+import eris.compiler.symbol.Symbol;
 import eris.compiler.symbol.TypeSymbol;
 
-public class NamedTypeNode extends TypeNode {
+public class NamedTypeNode extends TypeNode implements SymbolReferencingNode {
     public final String name;
 
     public TypeSymbol symbol;
@@ -21,4 +22,9 @@ public class NamedTypeNode extends TypeNode {
 
     @Override
     public <T> void acceptChildren(NodeVisitor<T> visitor) {}
+
+    @Override
+    public Symbol getReferencedSymbol() {
+        return symbol;
+    }
 }

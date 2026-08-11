@@ -3,9 +3,8 @@ package eris.compiler.ast;
 import eris.compiler.CompilerError;
 import eris.compiler.Token;
 import eris.compiler.symbol.Symbol;
-import eris.compiler.symbol.ValueSymbol;
 
-public class MemberNode extends ExpressionNode {
+public class MemberNode extends ExpressionNode implements SymbolReferencingNode {
     public final ExpressionNode object;
     public final String member;
 
@@ -25,5 +24,10 @@ public class MemberNode extends ExpressionNode {
     @Override
     public <T> void acceptChildren(NodeVisitor<T> visitor) throws CompilerError {
         object.accept(visitor);
+    }
+
+    @Override
+    public Symbol getReferencedSymbol() {
+        return symbol;
     }
 }

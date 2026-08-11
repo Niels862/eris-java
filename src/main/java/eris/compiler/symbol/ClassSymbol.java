@@ -32,7 +32,7 @@ public class ClassSymbol extends TypeSymbol {
 
     private FunctionSymbol makeDefaultConstructor() {
         List<ValueSymbol> parameters = new ArrayList<>();
-        parameters.add(new ValueSymbol("this", module, line, column));
+        parameters.add(new LocalValueSymbol("this", module, line, column));
 
         List<Type> parameterTypes = new ArrayList<>();
         for (ValueSymbol attribute : attributes) {

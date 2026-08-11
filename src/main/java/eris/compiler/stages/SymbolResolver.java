@@ -5,7 +5,6 @@ import eris.compiler.CompilerError;
 import eris.compiler.TypeContext;
 import eris.compiler.ast.*;
 import eris.compiler.symbol.*;
-import eris.compiler.symbol.ValueSymbol.Scope;
 import eris.compiler.type.FunctionType;
 import eris.compiler.type.Type;
 import eris.compiler.type.TypeBuilder;
@@ -97,7 +96,7 @@ public class SymbolResolver {
         public Void visit(ParameterNode node) throws CompilerError {
             super.visit(node);
             Type type = typeBuilder.build(node.type);
-            node.symbol.setMeta(type, Scope.Local);
+            node.symbol.setMeta(type);
             return null;
         }
 
@@ -106,17 +105,7 @@ public class SymbolResolver {
             super.visit(node);
             if (node.type != null) {
                 Type type = typeBuilder.build(node.type);
-
-                Scope scope;
-                if (currentFunction != null) {
-                    scope = Scope.Local;
-                } else if (currentClass != null) {
-                    scope = Scope.Member;
-                } else {
-                    scope = Scope.Global;
-                }
-
-                node.symbol.setMeta(type, scope);
+                node.symbol.setMeta(type);
             } else {
                 throw new UnsupportedOperationException();
             }

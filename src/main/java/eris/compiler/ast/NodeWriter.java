@@ -219,14 +219,21 @@ public class NodeWriter extends NodeVisitor<Void> {
 
     private void writeDefault(Node node) {
         String s = node.getClass().getSimpleName() + " at " + node.line + ":" + node.column;
+
         if (node instanceof DeclarationNode declarationNode) {
             s += " declares " + declarationNode.getSymbol();
         }
+
+        if (node instanceof SymbolReferencingNode symbolReferencingNode) {
+            s += " references " + symbolReferencingNode.getReferencedSymbol();
+        }
+
         if (node instanceof ExpressionNode expressionNode) {
             if (expressionNode.hasInferredType()) {
                 s += " inferred as " + expressionNode.getInferredType();
             }
         }
+
         write(s);
     }
 }

@@ -4,10 +4,9 @@ import eris.compiler.BuildModule;
 import eris.compiler.CompilerError;
 import eris.compiler.TypeContext;
 import eris.compiler.ast.*;
-import eris.compiler.symbol.FunctionSymbol;
-import eris.compiler.symbol.ScopeHandler;
-import eris.compiler.symbol.SymbolBuilder;
-import eris.compiler.symbol.SymbolTable;
+import eris.compiler.symbol.*;
+
+import java.util.Stack;
 
 public class SymbolDeclarer {
     private final BuildModule module;
@@ -29,6 +28,8 @@ public class SymbolDeclarer {
     }
 
     private class NodeHandler extends NodeVisitor<Void> {
+        private final Stack<Symbol> frames = new Stack<>();
+
         @Override
         public Void defaultHandler(Node node) throws CompilerError {
             if (node instanceof ScopedNode scopedNode) {
@@ -41,38 +42,49 @@ public class SymbolDeclarer {
 
         @Override
         public Void visit(ModuleNode node) throws CompilerError {
-            super.visit(node);
             node.entrySymbol = new FunctionSymbol("$entry", module, node.line, node.column);
+
+            frames.push(node.entrySymbol);
+            super.visit(node);
+            frames.pop();
             return null;
         }
 
         @Override
         public Void visit(ClassNode node) throws CompilerError {
-            super.visit(node);
             node.symbol = builder.build(node);
             scopeHandler.declare(node.name, node.symbol);
+
+            frames.push(node.symbol);
+            super.visit(node);
+            frames.pop();
             return null;
         }
 
         @Override
         public Void visit(FunctionNode node) throws CompilerError {
-            super.visit(node);
             node.symbol = builder.build(node);
             scopeHandler.declare(node.name, node.symbol);
+
+            frames.push(node.symbol);
+            super.visit(node);
+            frames.pop();
             return null;
         }
 
         public Void visit(ParameterNode node) throws CompilerError {
-            super.visit(node);
             node.symbol = builder.build(node);
             scopeHandler.declare(node.name, node.symbol);
+
+            super.visit(node);
             return null;
         }
 
         public Void visit(VariableNode node) throws CompilerError {
-            super.visit(node);
-            node.symbol = builder.build(node);
+            node.symbol = builder.build(node, frames.peek());
             scopeHandler.declare(node.name, node.symbol);
+
+            super.visit(node);
             return null;
         }
     }
