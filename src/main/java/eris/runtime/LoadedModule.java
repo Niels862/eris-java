@@ -95,4 +95,18 @@ public class LoadedModule {
         resolvedFunctions.put(reference, resolved);
         return resolved;
     }
+
+    public LoadedAttribute resolveAttribute(int index) {
+        if (resolvedConstants[index] != null) {
+            return (LoadedAttribute) resolvedConstants[index];
+        }
+
+        AttributeReferenceConstant reference = (AttributeReferenceConstant) constants.get(index);
+        LoadedClass resolvedClass = resolveClass(reference.clazz);
+
+        LoadedAttribute resolved = resolvedClass.resolveAttribute(reference);
+        resolvedConstants[index] = resolved;
+
+        return resolved;
+    }
 }

@@ -28,6 +28,7 @@ public class Compiler {
             Module module = buildModule.compile();
 
             compiledModules.add(module);
+            module.dump();
         } catch (CompilerError e) {
             System.err.println(e.getMessage());
             return null;

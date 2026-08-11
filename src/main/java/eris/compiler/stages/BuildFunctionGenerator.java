@@ -334,8 +334,8 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
             expressionGenerator.generate(node.object);
 
             switch (node.symbol) {
-                case ValueSymbol valueSymbol -> {
-                    emit(new LoadAttribute(valueSymbol));
+                case AttributeValueSymbol attributeValueSymbol -> {
+                    emit(new LoadAttribute(attributeValueSymbol));
                 }
 
                 default -> {
@@ -396,9 +396,20 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
 
         @Override
         public Void visit(IdentifierNode node) {
-            if (node.symbol instanceof ValueSymbol valueSymbol) {
-                emit(new StoreLocal(valueSymbol, false, converter));
+            if (node.symbol instanceof LocalValueSymbol localValueSymbol) {
+                emit(new StoreLocal(localValueSymbol, false, converter));
                 converter.toType = null;
+            } else {
+                throw new UnsupportedOperationException();
+            }
+            return null;
+        }
+
+        @Override
+        public Void visit(MemberNode node) throws CompilerError {
+            if (node.symbol instanceof AttributeValueSymbol attributeValueSymbol) {
+                expressionGenerator.generate(node.object);
+                emit(new StoreAttribute(attributeValueSymbol));
             } else {
                 throw new UnsupportedOperationException();
             }

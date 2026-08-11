@@ -7,6 +7,7 @@ import eris.compiler.symbol.ValueSymbol;
 import eris.module.Function;
 import eris.module.Instruction;
 import eris.module.OpCode;
+import eris.module.constant.AttributeReferenceConstant;
 import eris.module.constant.ClassReferenceConstant;
 import eris.module.constant.Constant;
 import eris.module.constant.FunctionReferenceConstant;
@@ -117,6 +118,20 @@ public class FunctionCompiler {
         @Override
         public Void visit(StoreLocal instruction) {
             emit(OpCode.STORE_LOCAL, slotIndexes.get(instruction.symbol));
+            return null;
+        }
+
+        @Override
+        public Void visit(LoadAttribute instruction) throws CompilerError {
+            AttributeReferenceConstant constant = constants.attributes.get(instruction.symbol);
+            emit(OpCode.LOAD_ATTR, constants.getIndexOf(constant));
+            return null;
+        }
+
+        @Override
+        public Void visit(StoreAttribute instruction) throws CompilerError {
+            AttributeReferenceConstant constant = constants.attributes.get(instruction.symbol);
+            emit(OpCode.STORE_ATTR, constants.getIndexOf(constant));
             return null;
         }
 

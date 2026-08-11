@@ -9,6 +9,6 @@ func make_point(x: int, y: int) -> Point {
 
 func main() -> int {
     point: Point = make_point(3, 5);
-    x: int = 6;
+    point.x = 7;
     return point.x;
 }

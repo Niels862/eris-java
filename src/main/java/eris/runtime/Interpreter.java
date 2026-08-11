@@ -117,6 +117,19 @@ public class Interpreter {
                 stack.set(basePointer + argument, value);
             }
 
+            case LOAD_ATTR -> {
+                LoadedAttribute attribute = module.resolveAttribute(argument);
+                ErisObject object = (ErisObject) stack.removeLast();
+                stack.add(object.attributes[attribute.offset]);
+            }
+
+            case STORE_ATTR -> {
+                LoadedAttribute attribute = module.resolveAttribute(argument);
+                ErisObject object = (ErisObject) stack.removeLast();
+                Object value = stack.removeLast();
+                object.attributes[attribute.offset] = value;
+            }
+
             case POP -> {
                 stack.removeLast();
             }
@@ -126,10 +139,9 @@ public class Interpreter {
             }
 
             case NEW -> {
-                Constant constant = constants.get(argument);
-                ClassReferenceConstant reference = (ClassReferenceConstant) constant;
+                ClassReferenceConstant reference = (ClassReferenceConstant) constants.get(argument);
                 LoadedClass clazz = module.resolveClass(reference);
-                stack.add(new ErisObject(clazz, new Object[0]));
+                stack.add(new ErisObject(clazz, new Object[clazz.size]));
             }
 
             case EQ -> {
@@ -171,8 +183,7 @@ public class Interpreter {
             }
 
             case CALL -> {
-                Constant constant = constants.get(argument);
-                FunctionReferenceConstant reference = (FunctionReferenceConstant) constant;
+                FunctionReferenceConstant reference = (FunctionReferenceConstant) constants.get(argument);
                 enterFunction(module.resolveFunction(reference));
             }
 

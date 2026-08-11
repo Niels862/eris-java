@@ -72,7 +72,7 @@ public class BuildModule {
         List<Function> functions = new ArrayList<>();
 
         for (ClassNode classNode : moduleNode.classes) {
-            classes.add(new Class(classNode.symbol.name));
+            classes.add(new ClassCompiler().compile(classNode.symbol));
         }
 
         int entryFunctionIndex = -1;

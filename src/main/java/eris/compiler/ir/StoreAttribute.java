@@ -1,12 +1,12 @@
 package eris.compiler.ir;
 
 import eris.compiler.CompilerError;
-import eris.compiler.symbol.ValueSymbol;
+import eris.compiler.symbol.AttributeValueSymbol;
 
 public class StoreAttribute extends IntermediateInstruction {
-    public final ValueSymbol symbol;
+    public final AttributeValueSymbol symbol;
 
-    public StoreAttribute(ValueSymbol symbol) {
+    public StoreAttribute(AttributeValueSymbol symbol) {
         this.symbol = symbol;
     }
 

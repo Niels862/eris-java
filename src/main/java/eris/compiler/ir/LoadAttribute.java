@@ -1,12 +1,12 @@
 package eris.compiler.ir;
 
 import eris.compiler.CompilerError;
-import eris.compiler.symbol.ValueSymbol;
+import eris.compiler.symbol.AttributeValueSymbol;
 
 public class LoadAttribute extends IntermediateInstruction {
-    public final ValueSymbol symbol;
+    public final AttributeValueSymbol symbol;
 
-    public LoadAttribute(ValueSymbol symbol) {
+    public LoadAttribute(AttributeValueSymbol symbol) {
         this.symbol = symbol;
     }
 

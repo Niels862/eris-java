@@ -2,6 +2,7 @@ package eris.compiler.stages;
 
 import eris.compiler.BuildModule;
 import eris.compiler.Interner;
+import eris.compiler.symbol.AttributeValueSymbol;
 import eris.compiler.symbol.ClassSymbol;
 import eris.compiler.symbol.FunctionSymbol;
 import eris.module.constant.*;
@@ -35,11 +36,11 @@ public class ConstantManager {
         return new FunctionReferenceConstant(module, name);
     }, this::add);
 
-    private final Map<BuildModule, ModuleReferenceConstant> moduleReferenceConstants = new HashMap<>();
-    private final Map<ClassSymbol, ClassReferenceConstant> classReferenceConstants = new HashMap<>();
-    private final Map<FunctionSymbol, FunctionReferenceConstant> functionReferenceConstants = new HashMap<>();
-    private final Map<Integer, IntegerConstant> integerConstants = new HashMap<>();
-    private final Map<String, StringConstant> stringConstants = new HashMap<>();
+    public final Interner<AttributeValueSymbol, AttributeReferenceConstant> attributes = new Interner<>(key -> {
+        ClassReferenceConstant clazz = classes.get(key.clazz);
+        StringConstant name = strings.get(key.name);
+        return new AttributeReferenceConstant(clazz, name);
+    }, this::add);
 
     private final Map<Constant, Integer> invertedIndexMap = new HashMap<>();
 

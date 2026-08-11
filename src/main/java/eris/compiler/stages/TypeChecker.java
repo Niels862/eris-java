@@ -175,6 +175,18 @@ public class TypeChecker extends NodeVisitor<Void> {
     }
 
     @Override
+    public Void visit(BooleanLiteralNode node) throws CompilerError {
+        node.setInferredType(context.BOOL);
+        return null;
+    }
+
+    @Override
+    public Void visit(StringLiteralNode node) throws CompilerError {
+        node.setInferredType(context.STRING);
+        return null;
+    }
+
+    @Override
     public Void visit(NullLiteralNode node) throws CompilerError {
         node.setInferredType(context.NULL);
         return null;
