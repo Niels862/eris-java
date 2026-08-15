@@ -19,9 +19,7 @@ public class SymbolResolver {
     private final ScopeHandler scopeHandler = new ScopeHandler();
     private final NodeHandler nodeHandler = new NodeHandler();
     private final TypeBuilder typeBuilder = new TypeBuilder();
-
-    private ClassNode currentClass;
-    private FunctionNode currentFunction;
+    private final TypeInferrer typeInferrer = new TypeInferrer();
 
     public SymbolResolver(BuildModule module) {
         this.module = module;
@@ -52,9 +50,6 @@ public class SymbolResolver {
 
         @Override
         public Void visit(ClassNode node) throws CompilerError {
-            assert currentClass == null;
-            currentClass = node;
-
             super.visit(node);
 
             List<ValueSymbol> attributes = new ArrayList<>();
@@ -63,16 +58,11 @@ public class SymbolResolver {
             }
 
             node.symbol.setMeta(attributes, node.scope);
-
-            currentClass = null;
             return null;
         }
 
         @Override
         public Void visit(FunctionNode node) throws CompilerError {
-            assert currentFunction == null;
-            currentFunction = node;
-
             super.visit(node);
 
             List<Type> parameterTypes = new ArrayList<>();
@@ -87,16 +77,14 @@ public class SymbolResolver {
             FunctionType type = new FunctionType(parameterTypes, returnType);
 
             node.symbol.setMeta(type, parameters);
-
-            currentFunction = null;
             return null;
         }
 
         @Override
         public Void visit(ParameterNode node) throws CompilerError {
             super.visit(node);
-            Type type = typeBuilder.build(node.type);
-            node.symbol.setMeta(type);
+            node.symbol.setType(typeBuilder.build(node.type));
+            node.symbol.setActive();
             return null;
         }
 
@@ -104,11 +92,12 @@ public class SymbolResolver {
         public Void visit(VariableNode node) throws CompilerError {
             super.visit(node);
             if (node.type != null) {
-                Type type = typeBuilder.build(node.type);
-                node.symbol.setMeta(type);
+                node.symbol.setType(typeBuilder.build(node.type));
             } else {
-                throw new UnsupportedOperationException();
+                assert node.initialValue != null;
+                node.symbol.setType(typeInferrer.infer(node.initialValue));
             }
+            node.symbol.setActive();
             return null;
         }
 

@@ -1,6 +1,7 @@
 package eris.compiler.symbol;
 
 import eris.compiler.BuildModule;
+import eris.compiler.type.ClassType;
 import eris.compiler.type.ClassValueType;
 import eris.compiler.type.FunctionType;
 import eris.compiler.type.Type;
@@ -10,6 +11,8 @@ import java.util.List;
 
 public class ClassSymbol extends TypeSymbol {
     public final ClassValueType valueType;
+    public final ClassType classType;
+
     public List<ValueSymbol> attributes;
     public SymbolTable symbolTable;
     public FunctionSymbol constructor;
@@ -17,6 +20,7 @@ public class ClassSymbol extends TypeSymbol {
     public ClassSymbol(String name, BuildModule module, int line, int column) {
         super(name, module, line, column, true);
         this.valueType = new ClassValueType(this);
+        this.classType = new ClassType(this);
     }
 
     public void setMeta(List<ValueSymbol> attributes, SymbolTable symbolTable) {

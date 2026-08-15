@@ -9,8 +9,8 @@ public class LocalValueSymbol extends ValueSymbol {
     }
 
     @Override
-    public void setMeta(Type type) {
-        super.setMeta(type);
+    public void setType(Type type) {
+        super.setType(type);
     }
 
     @Override
