@@ -411,8 +411,9 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
                 expressionGenerator.generate(node.object);
                 emit(new StoreAttribute(attributeValueSymbol));
             } else {
-                throw new UnsupportedOperationException();
+                throw new UnsupportedOperationException("Not an attribute: " + node.symbol);
             }
+
             return null;
         }
     }

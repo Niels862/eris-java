@@ -4,6 +4,7 @@ import eris.compiler.symbol.ClassSymbol;
 import eris.compiler.symbol.Symbol;
 import eris.compiler.symbol.SymbolTable;
 import eris.compiler.type.ClassValueType;
+import eris.compiler.type.ErrorType;
 import eris.compiler.type.NullableType;
 
 public class TypeContext {
@@ -17,6 +18,7 @@ public class TypeContext {
     public final ClassValueType STRING = STRING_SYMBOL.valueType;
 
     public final NullableType NULL = new NullableType(null);
+    public final ErrorType ERROR = new ErrorType();
 
     public final SymbolTable symbolTable = new SymbolTable(new Symbol[]{
             INT_SYMBOL,

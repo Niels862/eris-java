@@ -1,20 +1,16 @@
 package eris.compiler.type;
 
-import eris.compiler.symbol.ValueSymbol;
+import eris.compiler.ast.ExpressionNode;
 
 public class InferenceType extends Type {
-    private static int nextId = 1;
+    public final ExpressionNode expression;
 
-    public final ValueSymbol symbol;
-    public final int id;
-
-    public InferenceType(ValueSymbol symbol) {
-        this.symbol = symbol;
-        this.id = nextId++;
+    public InferenceType(ExpressionNode expression) {
+        this.expression = expression;
     }
 
     @Override
     public String toString() {
-        return "@t" + id;
+        return "@[" + expression + "]";
     }
 }

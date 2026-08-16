@@ -1,6 +1,7 @@
 package eris.compiler.type;
 
 import eris.compiler.CompilerError;
+import eris.compiler.Interner;
 import eris.compiler.ast.NamedTypeNode;
 import eris.compiler.ast.NodeVisitor;
 import eris.compiler.ast.NullableTypeNode;
@@ -8,6 +9,8 @@ import eris.compiler.ast.TypeNode;
 import eris.compiler.symbol.ClassSymbol;
 
 public class TypeBuilder extends NodeVisitor<Type> {
+    private final Interner<Type, NullableType> nullableTypes = new Interner<>(NullableType::new, null);
+
     public Type build(TypeNode typeNode) throws CompilerError {
         return typeNode.accept(this);
     }
@@ -23,6 +26,6 @@ public class TypeBuilder extends NodeVisitor<Type> {
 
     @Override
     public Type visit(NullableTypeNode node) throws CompilerError {
-        return new NullableType(build(node.type));
+        return nullableTypes.get(build(node.type));
     }
 }

@@ -19,7 +19,7 @@ public class SymbolResolver {
     private final ScopeHandler scopeHandler = new ScopeHandler();
     private final NodeHandler nodeHandler = new NodeHandler();
     private final TypeBuilder typeBuilder = new TypeBuilder();
-    private final TypeInferrer typeInferrer = new TypeInferrer();
+    private final TypeInferrer typeInferrer = new TypeInferrer(false);
 
     public SymbolResolver(BuildModule module) {
         this.module = module;

@@ -7,6 +7,10 @@ public abstract class Type {
     @Override
     public abstract String toString();
 
+    public boolean isError() {
+        return this instanceof ErrorType;
+    }
+
     public TypeTag toTypeTag() {
         TypeContext context = TypeContext.instance;
 
