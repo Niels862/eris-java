@@ -6,8 +6,9 @@ import eris.compiler.refinement.IsNotNullRefinement;
 import eris.compiler.refinement.IsNullRefinement;
 import eris.compiler.refinement.Refinement;
 import eris.compiler.symbol.ValueSymbol;
+import eris.compiler.type.Type;
 
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 public class SymbolRefiner {
@@ -20,6 +21,16 @@ public class SymbolRefiner {
 
     public Map<ValueSymbol, Refinement> refineIfFalse(ExpressionNode node) {
         return negative.refine(node);
+    }
+
+    public Map<ValueSymbol, Refinement> empty() {
+        return new HashMap<>();
+    }
+
+    public Map<ValueSymbol, Refinement> singleton(ValueSymbol symbol, Refinement refinement) {
+        Map<ValueSymbol, Refinement> map = empty();
+        map.put(symbol, refinement);
+        return map;
     }
 
     // left is value, right is null
@@ -51,7 +62,7 @@ public class SymbolRefiner {
 
         @Override
         public Map<ValueSymbol, Refinement> defaultHandler(Node node) {
-            return Collections.emptyMap();
+            return empty();
         }
 
         @Override
@@ -64,16 +75,16 @@ public class SymbolRefiner {
                 return negative.visitEquals(node.left, node.right);
             }
 
-            return defaultHandler(node);
+            return empty();
         }
 
         public Map<ValueSymbol, Refinement> visitEquals(ExpressionNode left, ExpressionNode right) {
             ValueSymbol nullCheckedValue = isNullCheck(left, right);
             if (nullCheckedValue != null) {
-                return Collections.singletonMap(nullCheckedValue, new IsNullRefinement());
+                return singleton(nullCheckedValue, new IsNullRefinement());
             }
 
-            return Collections.emptyMap();
+            return empty();
         }
     }
 
@@ -88,16 +99,16 @@ public class SymbolRefiner {
 
         @Override
         public Map<ValueSymbol, Refinement> defaultHandler(Node node) throws CompilerError {
-            return Collections.emptyMap();
+            return empty();
         }
 
         public Map<ValueSymbol, Refinement> visitEquals(ExpressionNode left, ExpressionNode right) {
             ValueSymbol nullCheckedValue = isNullCheck(left, right);
             if (nullCheckedValue != null) {
-                return Collections.singletonMap(nullCheckedValue, new IsNotNullRefinement());
+                return singleton(nullCheckedValue, new IsNotNullRefinement());
             }
 
-            return Collections.emptyMap();
+            return empty();
         }
     }
 }

@@ -5,7 +5,7 @@ import eris.compiler.type.Type;
 
 public class IsNotNullRefinement extends Refinement {
     @Override
-    public Refinement narrowUnion(Refinement other) {
+    public Refinement narrowingUnion(Refinement other) {
         if (other instanceof IsNotNullRefinement) {
             return this;
         }

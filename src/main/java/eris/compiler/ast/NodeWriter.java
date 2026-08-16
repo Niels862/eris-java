@@ -34,7 +34,7 @@ public class NodeWriter extends NodeVisitor<Void> {
     @Override
     public Void visit(FunctionNode node) throws CompilerError {
         write("name", node.name);
-        write("statements", node.statements);
+        write("statements", node.body);
         write("parameters", node.parameters);
         write("returnType", node.returnType);
         return null;

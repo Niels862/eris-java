@@ -1,25 +1,26 @@
 package eris.compiler.refinement;
 
-import eris.compiler.TypeContext;
 import eris.compiler.type.Type;
 
-public class IsNullRefinement extends Refinement {
+public class IsInstanceRefinement extends Refinement {
+    public final Type type;
+
+    public IsInstanceRefinement(Type type) {
+        this.type = type;
+    }
+
     @Override
     public Refinement narrowingUnion(Refinement other) {
-        if (other instanceof IsNullRefinement) {
-            return this;
-        }
-
         return null;
     }
 
     @Override
     public Type apply(Type type) {
-        return TypeContext.instance.NULL;
+        return this.type;
     }
 
     @Override
     public String toString() {
-        return "IsNull";
+        return "IsInstance(" + type + ")";
     }
 }

@@ -4,6 +4,7 @@ import eris.compiler.BuildModule;
 import eris.compiler.CompilerError;
 import eris.compiler.TypeContext;
 import eris.compiler.ast.*;
+import eris.compiler.refinement.IsInstanceRefinement;
 import eris.compiler.refinement.Refinement;
 import eris.compiler.symbol.*;
 import eris.compiler.type.*;
@@ -63,9 +64,7 @@ public class TypeChecker {
         public Void visit(FunctionNode node) throws CompilerError {
             FunctionNode previous = function;
             function = node;
-
-            NodeHandler.accept(this, node.statements);
-
+            withScope(node.body);
             function = previous;
             return null;
         }
@@ -92,25 +91,32 @@ public class TypeChecker {
             if (!isAssignableTo(target, value)) {
                 throw node.error(module, String.format("Cannot assign `%s` value to `%s` target", value, target));
             }
+
+            if (node.target instanceof IdentifierNode identifierTarget) {
+                if (identifierTarget.symbol instanceof LocalValueSymbol localValueSymbolTarget) {
+                    scopedRefinements.getLast().put(localValueSymbolTarget, new IsInstanceRefinement(value));
+                }
+            }
+
             return null;
         }
 
         public Void visit(IfElseStatementNode node) throws CompilerError {
             visitCondition(node.condition);
-            withRefinement(node.thenBody, refiner.refineIfTrue(node.condition));
-            withRefinement(node.elseBody, refiner.refineIfFalse(node.condition));
+            withScope(node.thenBody, refiner.refineIfTrue(node.condition));
+            withScope(node.elseBody, refiner.refineIfFalse(node.condition));
             return null;
         }
 
         public Void visit(WhileStatementNode node) throws CompilerError {
             visitCondition(node.condition);
-            NodeHandler.accept(this, node.body);
+            withScope(node.body, refiner.refineIfTrue(node.condition));
             return null;
         }
 
         public Void visit(DoWhileStatementNode node) throws CompilerError {
             visitCondition(node.condition);
-            NodeHandler.accept(this, node.body);
+            withScope(node.body);
             return null;
         }
 
@@ -124,7 +130,7 @@ public class TypeChecker {
         }
 
         public Void visit(LoopStatementNode node) throws CompilerError {
-            NodeHandler.accept(this, node.body);
+            withScope(node.body);
             return null;
         }
 
@@ -219,13 +225,17 @@ public class TypeChecker {
             return false;
         }
 
-        private Map<ValueSymbol, Refinement> withRefinement(
+        private Map<ValueSymbol, Refinement> withScope(
                 List<StatementNode> statements,
                 Map<ValueSymbol, Refinement> refinements) throws CompilerError {
             scopedRefinements.add(refinements);
             NodeVisitor.accept(this, statements);
             scopedRefinements.removeLast();
             return refinements;
+        }
+
+        private Map<ValueSymbol, Refinement> withScope(List<StatementNode> statements) throws CompilerError {
+            return withScope(statements, refiner.empty());
         }
     }
 

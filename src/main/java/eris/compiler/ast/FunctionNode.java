@@ -10,7 +10,7 @@ import java.util.List;
 
 public class FunctionNode extends Node implements DeclarationNode, ScopedNode {
     public final String name;
-    public final List<StatementNode> statements;
+    public final List<StatementNode> body;
     public final List<ParameterNode> parameters;
     public final TypeNode returnType;
 
@@ -19,12 +19,12 @@ public class FunctionNode extends Node implements DeclarationNode, ScopedNode {
 
     public FunctionNode(
             Token name,
-            List<StatementNode> statements,
+            List<StatementNode> body,
             List<ParameterNode> parameters,
             TypeNode returnType) {
         super(name);
         this.name = name.text;
-        this.statements = statements;
+        this.body = body;
         this.parameters = parameters;
         this.returnType = returnType;
     }
@@ -36,7 +36,7 @@ public class FunctionNode extends Node implements DeclarationNode, ScopedNode {
     @Override
     public <T> void acceptChildren(NodeVisitor<T> visitor) throws CompilerError {
         NodeVisitor.accept(visitor, parameters);
-        NodeVisitor.accept(visitor, statements);
+        NodeVisitor.accept(visitor, body);
         returnType.accept(visitor);
     }
 
@@ -44,7 +44,7 @@ public class FunctionNode extends Node implements DeclarationNode, ScopedNode {
     public <T> void acceptChildren(NodeVisitor<T> visitor, ScopeHandler scopeHandler) throws CompilerError {
         scopeHandler.enterScope(scope);
         NodeVisitor.accept(visitor, parameters);
-        NodeVisitor.accept(visitor, statements);
+        NodeVisitor.accept(visitor, body);
         scopeHandler.leaveScope(scope);
         returnType.accept(visitor);
     }

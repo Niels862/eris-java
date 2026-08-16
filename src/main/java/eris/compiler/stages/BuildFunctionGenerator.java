@@ -111,7 +111,7 @@ public class BuildFunctionGenerator extends NodeVisitor<Void> {
     public Void visit(FunctionNode node) throws CompilerError {
         setSymbol(node.symbol);
 
-        for (StatementNode statement : node.statements) {
+        for (StatementNode statement : node.body) {
             statementGenerator.generate(statement);
         }
 
