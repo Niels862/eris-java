@@ -4,14 +4,13 @@ import eris.compiler.BuildModule;
 import eris.compiler.CompilerError;
 import eris.compiler.TypeContext;
 import eris.compiler.ast.*;
+import eris.compiler.refinement.Refinement;
 import eris.compiler.symbol.*;
 import eris.compiler.type.FunctionType;
 import eris.compiler.type.Type;
 import eris.compiler.type.TypeBuilder;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class SymbolResolver {
     private final BuildModule module;

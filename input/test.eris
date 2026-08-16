@@ -11,7 +11,11 @@ func make_point(x: int, y: int) -> Point {
 }
 
 func f(x: int?) -> int {
-    return x;
+    if x !== null {
+        x = null;
+        return x;
+    }
+    return 0;
 }
 
 func main() -> int {

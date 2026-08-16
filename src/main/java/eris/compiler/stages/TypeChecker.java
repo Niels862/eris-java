@@ -4,12 +4,25 @@ import eris.compiler.BuildModule;
 import eris.compiler.CompilerError;
 import eris.compiler.TypeContext;
 import eris.compiler.ast.*;
+import eris.compiler.refinement.Refinement;
 import eris.compiler.symbol.*;
 import eris.compiler.type.*;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class TypeChecker {
     private final BuildModule module;
     private final NodeHandler handler = new NodeHandler();
+    private final TargetNodeHandler targetHandler = new TargetNodeHandler();
+
+    private final List<Map<ValueSymbol, Refinement>> scopedRefinements = new ArrayList<>();
+    private final TypeInferrer inferrer = new TypeInferrer(true, scopedRefinements);
+    private final SymbolRefiner refiner = new SymbolRefiner();
+    private final TypeContext context = TypeContext.instance;
+
+    private FunctionNode function;
 
     public TypeChecker(BuildModule module) {
         this.module = module;
@@ -20,11 +33,6 @@ public class TypeChecker {
     }
 
     private class NodeHandler extends NodeVisitor<Void> {
-        private final TypeInferrer inferrer = new TypeInferrer(true);
-        private final TypeContext context = TypeContext.instance;
-
-        private FunctionNode function;
-
         private Type infer(ExpressionNode node) throws CompilerError {
             if (!node.hasInferredType()) {
                 Type type = inferrer.infer(node);
@@ -80,7 +88,7 @@ public class TypeChecker {
 
         public Void visit(AssignmentStatementNode node) throws CompilerError {
             Type value = infer(node.value);
-            Type target = infer(node.target);
+            Type target = targetHandler.infer(node.target);
             if (!isAssignableTo(target, value)) {
                 throw node.error(module, String.format("Cannot assign `%s` value to `%s` target", value, target));
             }
@@ -89,8 +97,8 @@ public class TypeChecker {
 
         public Void visit(IfElseStatementNode node) throws CompilerError {
             visitCondition(node.condition);
-            NodeHandler.accept(this, node.thenBody);
-            NodeHandler.accept(this, node.elseBody);
+            withRefinement(node.thenBody, refiner.refineIfTrue(node.condition));
+            withRefinement(node.elseBody, refiner.refineIfFalse(node.condition));
             return null;
         }
 
@@ -158,7 +166,6 @@ public class TypeChecker {
         @Override
         public Void visit(CallNode node) throws CompilerError {
             Type calledType = infer(node.function);
-            boolean functionOk = !calledType.isError();
             FunctionType function = switch (calledType) {
                 case FunctionType functionType
                         -> functionType;
@@ -210,6 +217,40 @@ public class TypeChecker {
             }
 
             return false;
+        }
+
+        private Map<ValueSymbol, Refinement> withRefinement(
+                List<StatementNode> statements,
+                Map<ValueSymbol, Refinement> refinements) throws CompilerError {
+            scopedRefinements.add(refinements);
+            NodeVisitor.accept(this, statements);
+            scopedRefinements.removeLast();
+            return refinements;
+        }
+    }
+
+    private class TargetNodeHandler extends NodeVisitor<Type> {
+        private Type infer(ExpressionNode node) throws CompilerError {
+            assert !node.hasInferredType();
+            Type type = node.accept(this);
+            node.setInferredType(type);
+            return type;
+        }
+
+        @Override
+        public Type defaultHandler(Node node) throws CompilerError {
+            throw node.error(module, "Invalid assignment target");
+        }
+
+        @Override
+        public Type visit(MemberNode node) throws CompilerError {
+            handler.infer(node.object);
+            return inferrer.infer(node);
+        }
+
+        @Override
+        public Type visit(IdentifierNode node) {
+            return inferrer.infer(node.symbol);
         }
     }
 }

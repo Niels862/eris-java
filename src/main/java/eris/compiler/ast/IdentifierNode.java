@@ -2,6 +2,7 @@ package eris.compiler.ast;
 
 import eris.compiler.CompilerError;
 import eris.compiler.Token;
+import eris.compiler.refinement.Refinement;
 import eris.compiler.symbol.Symbol;
 
 public class IdentifierNode extends ExpressionNode implements SymbolReferencingNode {

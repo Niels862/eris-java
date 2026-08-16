@@ -3,28 +3,63 @@ package eris.compiler.stages;
 import eris.compiler.CompilerError;
 import eris.compiler.TypeContext;
 import eris.compiler.ast.*;
-import eris.compiler.symbol.ClassSymbol;
-import eris.compiler.symbol.FunctionSymbol;
-import eris.compiler.symbol.Symbol;
-import eris.compiler.symbol.ValueSymbol;
+import eris.compiler.refinement.Refinement;
+import eris.compiler.symbol.*;
 import eris.compiler.type.*;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 public class TypeInferrer {
+    private final static TypeInferrer statelessInferrer = new TypeInferrer(true);
+
     private final NodeHandler handler = new NodeHandler();
+    private final TypeContext context = TypeContext.instance;
+
     private final boolean resolveInferenceTypes;
+    private final List<Map<ValueSymbol, Refinement>> scopedRefinements;
 
     public TypeInferrer(boolean resolveInferenceTypes) {
         this.resolveInferenceTypes = resolveInferenceTypes;
+        this.scopedRefinements = Collections.emptyList();
+    }
+
+    public TypeInferrer(boolean resolveInferenceTypes, List<Map<ValueSymbol, Refinement>> scopedRefinements) {
+        this.resolveInferenceTypes = resolveInferenceTypes;
+        this.scopedRefinements = scopedRefinements;
     }
 
     public Type infer(ExpressionNode node) {
-        return handler.infer(node);
+        return handler.handle(node);
+    }
+
+    public Type infer(Symbol symbol) {
+        if (symbol instanceof ValueSymbol valueSymbol) {
+            Type type = valueSymbol.type;
+
+            if (resolveInferenceTypes && type instanceof InferenceType inferenceType) {
+                type = statelessInferrer.infer(inferenceType.expression);
+                assert !(type instanceof InferenceType);
+                valueSymbol.type = type;
+            }
+
+            return type;
+        }
+
+        if (symbol instanceof FunctionSymbol functionSymbol) {
+            return functionSymbol.type;
+        }
+
+        if (symbol instanceof ClassSymbol classSymbol) {
+            return classSymbol.classType;
+        }
+
+        throw new UnsupportedOperationException("Unsupported symbol: " + symbol);
     }
 
     private class NodeHandler extends NodeVisitor<Type> {
-        private final TypeContext context = TypeContext.instance;
-
-        public Type infer(ExpressionNode node) {
+        public Type handle(ExpressionNode node) {
             try {
                 return inferType(node);
             } catch (CompilerError e) {
@@ -74,7 +109,7 @@ public class TypeInferrer {
         @Override
         public Type visit(MemberNode node) {
             if (node.symbol != null) {
-                return visitSymbol(node.symbol);
+                return infer(node.symbol);
             }
 
             if (resolveInferenceTypes) {
@@ -86,7 +121,7 @@ public class TypeInferrer {
 
                     if (symbol != null) {
                         node.symbol = symbol;
-                        return visitSymbol(symbol);
+                        return infer(symbol);
                     } else {
                         return context.ERROR;
                     }
@@ -101,28 +136,27 @@ public class TypeInferrer {
         @Override
         public Type visit(IdentifierNode node) {
             assert node.symbol != null;
-            return visitSymbol(node.symbol);
+            Type type = infer(node.symbol);
+            if (node.symbol instanceof ValueSymbol valueSymbol) {
+                return applyRefinement(valueSymbol, type);
+            } else {
+                return type;
+            }
         }
 
-        private Type visitSymbol(Symbol symbol) {
-            if (symbol instanceof ValueSymbol valueSymbol) {
-                Type type = valueSymbol.type;
-                if (resolveInferenceTypes && type instanceof InferenceType inferenceType) {
-                    type = infer(inferenceType.expression);
-                    assert !(type instanceof InferenceType);
-                }
+        private Type applyRefinement(ValueSymbol symbol, Type type) {
+            if (!(symbol instanceof LocalValueSymbol)) {
                 return type;
             }
 
-            if (symbol instanceof FunctionSymbol functionSymbol) {
-                return functionSymbol.type;
+            for (Map<ValueSymbol, Refinement> map : scopedRefinements) {
+                Refinement refinement = map.get(symbol);
+                if (refinement != null) {
+                    type = refinement.apply(type);
+                }
             }
 
-            if (symbol instanceof ClassSymbol classSymbol) {
-                return classSymbol.classType;
-            }
-
-            throw new UnsupportedOperationException("Unsupported symbol: " + symbol);
+            return type;
         }
 
         public Type visit(IntegerLiteralNode node) {
