@@ -9,8 +9,6 @@ import eris.compiler.symbol.Symbol;
 import eris.compiler.symbol.ValueSymbol;
 import eris.compiler.type.*;
 
-import javax.print.attribute.standard.PresentationDirection;
-
 public class TypeInferrer {
     private final NodeHandler handler = new NodeHandler();
     private final boolean resolveInferenceTypes;
@@ -28,11 +26,7 @@ public class TypeInferrer {
 
         public Type infer(ExpressionNode node) {
             try {
-                Type type = inferType(node);
-                if (type instanceof InferenceType) {
-                    System.out.printf("%s on %s (%b)%n", type, node, resolveInferenceTypes);
-                }
-                return type;
+                return inferType(node);
             } catch (CompilerError e) {
                 throw new RuntimeException("Unexpected error", e);
             }
@@ -147,5 +141,4 @@ public class TypeInferrer {
             return context.NULL;
         }
     }
-
 }

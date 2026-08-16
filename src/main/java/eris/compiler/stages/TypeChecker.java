@@ -7,7 +7,7 @@ import eris.compiler.ast.*;
 import eris.compiler.symbol.*;
 import eris.compiler.type.*;
 
-public class TypeChecker extends NodeVisitor<Void> {
+public class TypeChecker {
     private final BuildModule module;
     private final NodeHandler handler = new NodeHandler();
 
@@ -22,6 +22,8 @@ public class TypeChecker extends NodeVisitor<Void> {
     private class NodeHandler extends NodeVisitor<Void> {
         private final TypeInferrer inferrer = new TypeInferrer(true);
         private final TypeContext context = TypeContext.instance;
+
+        private FunctionNode function;
 
         private Type infer(ExpressionNode node) throws CompilerError {
             if (!node.hasInferredType()) {
@@ -42,6 +44,97 @@ public class TypeChecker extends NodeVisitor<Void> {
                 infer(expressionNode);
             } else {
                 node.acceptChildren(this);
+            }
+            return null;
+        }
+
+        public Void visit(ClassNode node) throws CompilerError {
+            return defaultHandler(node);
+        }
+
+        public Void visit(FunctionNode node) throws CompilerError {
+            FunctionNode previous = function;
+            function = node;
+
+            NodeHandler.accept(this, node.statements);
+
+            function = previous;
+            return null;
+        }
+
+        public Void visit(VariableNode node) throws CompilerError {
+            if (node.initialValue != null) {
+                Type initialValue = infer(node.initialValue);
+                if (node.symbol.type instanceof InferenceType) {
+                    node.symbol.setType(initialValue);
+                }
+
+                if (!isAssignableTo(node.symbol.type, initialValue)) {
+                    String err = String.format("Cannot use `%s` value as initial value of '%s' of type `%s`",
+                            initialValue, node.name, node.symbol.type);
+                    throw node.error(module, err);
+                }
+            }
+            return null;
+        }
+
+        public Void visit(AssignmentStatementNode node) throws CompilerError {
+            Type value = infer(node.value);
+            Type target = infer(node.target);
+            if (!isAssignableTo(target, value)) {
+                throw node.error(module, String.format("Cannot assign `%s` value to `%s` target", value, target));
+            }
+            return null;
+        }
+
+        public Void visit(IfElseStatementNode node) throws CompilerError {
+            visitCondition(node.condition);
+            NodeHandler.accept(this, node.thenBody);
+            NodeHandler.accept(this, node.elseBody);
+            return null;
+        }
+
+        public Void visit(WhileStatementNode node) throws CompilerError {
+            visitCondition(node.condition);
+            NodeHandler.accept(this, node.body);
+            return null;
+        }
+
+        public Void visit(DoWhileStatementNode node) throws CompilerError {
+            visitCondition(node.condition);
+            NodeHandler.accept(this, node.body);
+            return null;
+        }
+
+        private void visitCondition(ExpressionNode node) throws CompilerError {
+            Type condition = infer(node);
+            if (!isAssignableTo(context.BOOL, condition)) {
+                String err = String.format("Cannot use `%s` value as condition of type `%s`",
+                        condition, context.BOOL);
+                throw node.error(module, err);
+            }
+        }
+
+        public Void visit(LoopStatementNode node) throws CompilerError {
+            NodeHandler.accept(this, node.body);
+            return null;
+        }
+
+        public Void visit(ExpressionStatementNode node) throws CompilerError {
+            infer(node.expression);
+            return null;
+        }
+
+        public Void visit(ReturnStatementNode node) throws CompilerError {
+            if (function == null) {
+                throw node.error(module, "Return statement cannot be used outside of function body");
+            }
+
+            Type value = node.value == null ? context.NULL : infer(node.value);
+            if (!isAssignableTo(function.symbol.type.returnType, value)) {
+                String err = String.format("Cannot use `%s` value as `%s` value in return from '%s'",
+                        value, function.symbol.type.returnType, function.name);
+                throw node.error(module, err);
             }
             return null;
         }
@@ -102,6 +195,18 @@ public class TypeChecker extends NodeVisitor<Void> {
         private boolean isAssignableTo(Type target, Type value) {
             if (target == value) {
                 return true;
+            }
+
+            if (target instanceof NullableType targetNullableType) {
+                if (value == context.NULL) {
+                    return true;
+                }
+
+                if (value instanceof NullableType valueNullableType) {
+                    return isAssignableTo(targetNullableType.type, valueNullableType.type);
+                } else {
+                    return isAssignableTo(targetNullableType.type, value);
+                }
             }
 
             return false;

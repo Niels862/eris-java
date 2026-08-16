@@ -10,7 +10,11 @@ func make_point(x: int, y: int) -> Point {
     return p;
 }
 
+func f(x: int?) -> int {
+    return x;
+}
+
 func main() -> int {
     var x = make_point(3, 5).x;
-    return x;
+    return f(x);
 }

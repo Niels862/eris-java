@@ -9,11 +9,6 @@ public class LocalValueSymbol extends ValueSymbol {
     }
 
     @Override
-    public void setType(Type type) {
-        super.setType(type);
-    }
-
-    @Override
     public String toString() {
         return String.format("<LocalValueSymbol %s : %s>", name, type);
     }
