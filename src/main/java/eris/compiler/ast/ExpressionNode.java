@@ -1,6 +1,7 @@
 package eris.compiler.ast;
 
 import eris.compiler.Token;
+import eris.compiler.type.InferenceType;
 import eris.compiler.type.Type;
 
 public abstract class ExpressionNode extends Node {
@@ -17,6 +18,7 @@ public abstract class ExpressionNode extends Node {
 
     public void setInferredType(Type inferredType) {
         assert this.inferredType == null;
+        assert !(inferredType instanceof InferenceType);
         this.inferredType = inferredType;
     }
 

@@ -95,6 +95,15 @@ public class Interpreter {
         }
     }
 
+    public void callNativeFunction(NativeFunction nativeFunction, int numArgs) {
+        List<Object> args = stack.subList(stack.size() - numArgs, stack.size());
+        Object returnValue = nativeFunction.call(args);
+        for (int i = 0; i < numArgs; i++) {
+            stack.removeLast();
+        }
+        stack.add(returnValue);
+    }
+
     public void runInstruction(Instruction instruction) {
         int argument = instruction.argument;
 
@@ -184,7 +193,12 @@ public class Interpreter {
 
             case CALL -> {
                 FunctionReferenceConstant reference = (FunctionReferenceConstant) constants.get(argument);
-                enterFunction(module.resolveFunction(reference));
+                LoadedFunction loadedFunction = module.resolveFunction(reference);
+                if (loadedFunction.nativeFunction != null) {
+                    callNativeFunction(loadedFunction.nativeFunction, loadedFunction.function.numArgs);
+                } else {
+                    enterFunction(loadedFunction);
+                }
             }
 
             case RETURN -> {

@@ -59,7 +59,7 @@ public class BuildModule {
         TypeChecker checker = new TypeChecker(this);
         checker.check();
 
-        new NodeWriter().write(moduleNode);
+        //new NodeWriter().write(moduleNode);
     }
 
     public Module compile() throws CompilerError {

@@ -3,7 +3,7 @@ package eris.compiler.stages;
 import eris.compiler.CompilerError;
 import eris.compiler.TypeContext;
 import eris.compiler.ast.*;
-import eris.compiler.refinement.Refinement;
+import eris.compiler.Refinement;
 import eris.compiler.symbol.*;
 import eris.compiler.type.*;
 
@@ -12,26 +12,34 @@ import java.util.List;
 import java.util.Map;
 
 public class TypeInferrer {
-    private final static TypeInferrer statelessInferrer = new TypeInferrer(true);
+    private final static TypeInferrer statelessInferrer = new TypeInferrer(true, true);
 
     private final NodeHandler handler = new NodeHandler();
     private final TypeContext context = TypeContext.instance;
 
     private final boolean resolveInferenceTypes;
+    private final boolean setAstTypes;
     private final List<Map<ValueSymbol, Refinement>> scopedRefinements;
 
-    public TypeInferrer(boolean resolveInferenceTypes) {
-        this.resolveInferenceTypes = resolveInferenceTypes;
-        this.scopedRefinements = Collections.emptyList();
+    public TypeInferrer(boolean resolveInferenceTypes, boolean setAstTypes) {
+        this(resolveInferenceTypes, setAstTypes, Collections.emptyList());
     }
 
-    public TypeInferrer(boolean resolveInferenceTypes, List<Map<ValueSymbol, Refinement>> scopedRefinements) {
+    public TypeInferrer(
+            boolean resolveInferenceTypes,
+            boolean setAstTypes,
+            List<Map<ValueSymbol, Refinement>> scopedRefinements) {
         this.resolveInferenceTypes = resolveInferenceTypes;
+        this.setAstTypes = setAstTypes;
         this.scopedRefinements = scopedRefinements;
     }
 
     public Type infer(ExpressionNode node) {
-        return handler.handle(node);
+        Type type = handler.handle(node);
+        if (setAstTypes && !node.hasInferredType()) {
+            node.setInferredType(type);
+        }
+        return type;
     }
 
     public Type infer(Symbol symbol) {
@@ -138,25 +146,25 @@ public class TypeInferrer {
             assert node.symbol != null;
             Type type = infer(node.symbol);
             if (node.symbol instanceof ValueSymbol valueSymbol) {
-                return applyRefinement(valueSymbol, type);
+                return applyRefinement(valueSymbol);
             } else {
                 return type;
             }
         }
 
-        private Type applyRefinement(ValueSymbol symbol, Type type) {
+        private Type applyRefinement(ValueSymbol symbol) {
             if (!(symbol instanceof LocalValueSymbol)) {
-                return type;
+                return symbol.type;
             }
 
             for (Map<ValueSymbol, Refinement> map : scopedRefinements) {
                 Refinement refinement = map.get(symbol);
                 if (refinement != null) {
-                    type = refinement.apply(type);
+                    return refinement.type;
                 }
             }
 
-            return type;
+            return symbol.type;
         }
 
         public Type visit(IntegerLiteralNode node) {

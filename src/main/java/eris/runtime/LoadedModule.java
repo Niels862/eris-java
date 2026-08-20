@@ -18,6 +18,8 @@ public class LoadedModule {
     private final Module module;
     private final ModuleManager manager;
 
+    private final BuiltinLibrary.Implementation builtinImplementation;
+
     private final Map<ModuleReferenceConstant, LoadedModule> resolvedModules = new HashMap<>();
     private final Map<ClassReferenceConstant, LoadedClass> resolvedClasses = new HashMap<>();
     private final Map<FunctionReferenceConstant, LoadedFunction> resolvedFunctions = new HashMap<>();
@@ -26,9 +28,10 @@ public class LoadedModule {
         this.name = module.name;
         this.constants = module.constants;
         this.resolvedConstants = new Object[constants.size()];
-        this.entryFunction = new LoadedFunction(this, module.functions.get(module.entryFunctionReference));
+        this.entryFunction = new LoadedFunction(this, module.functions.get(module.entryFunctionReference), null);
         this.module = module;
         this.manager = manager;
+        this.builtinImplementation = BuiltinLibrary.lookup(name);
 
         resolveConstantValues();
     }
@@ -86,8 +89,7 @@ public class LoadedModule {
 
         LoadedModule resolvedModule = resolveModule(reference.module);
         if (resolvedModule == this) {
-            Function function = resolvedModule.module.lookupFunction(reference.name.value);
-            resolved = new LoadedFunction(this, function);
+            resolved = loadFunction(reference);
         } else {
             resolved = resolvedModule.resolveFunction(reference);
         }
@@ -108,5 +110,19 @@ public class LoadedModule {
         resolvedConstants[index] = resolved;
 
         return resolved;
+    }
+
+    private LoadedFunction loadFunction( FunctionReferenceConstant reference) {
+        Function function = module.lookupFunction(reference.name.value);
+        NativeFunction nativeFunction = loadNativeFunction(reference.name.value);
+        return new LoadedFunction(this, function, nativeFunction);
+    }
+
+    private NativeFunction loadNativeFunction(String name) {
+        if (builtinImplementation != null) {
+            return builtinImplementation.lookup(name);
+        } else {
+            return null;
+        }
     }
 }

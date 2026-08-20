@@ -46,7 +46,9 @@ public class FunctionNode extends Node implements DeclarationNode, ScopedNode {
         NodeVisitor.accept(visitor, parameters);
         NodeVisitor.accept(visitor, body);
         scopeHandler.leaveScope(scope);
-        returnType.accept(visitor);
+        if (returnType != null) {
+            returnType.accept(visitor);
+        }
     }
 
     @Override

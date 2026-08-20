@@ -3,6 +3,10 @@ class Point {
     y: int;
 }
 
+func print(o: int) -> int {
+    return 0;
+}
+
 func make_point(x: int, y: int) -> Point {
     var p = Point(x, y);
     p.x = x;
@@ -11,14 +15,14 @@ func make_point(x: int, y: int) -> Point {
 }
 
 func f(x: int?) -> int {
-    if x !== null {
-        x = null;
-        return 7;
+    if x === null {
+        return x;
     }
     return 42;
 }
 
 func main() -> int {
     var x = make_point(3, 5).x;
+    print(x);
     return f(x);
 }

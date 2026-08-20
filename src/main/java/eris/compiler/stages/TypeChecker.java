@@ -4,8 +4,7 @@ import eris.compiler.BuildModule;
 import eris.compiler.CompilerError;
 import eris.compiler.TypeContext;
 import eris.compiler.ast.*;
-import eris.compiler.refinement.IsInstanceRefinement;
-import eris.compiler.refinement.Refinement;
+import eris.compiler.Refinement;
 import eris.compiler.symbol.*;
 import eris.compiler.type.*;
 
@@ -19,7 +18,7 @@ public class TypeChecker {
     private final TargetNodeHandler targetHandler = new TargetNodeHandler();
 
     private final List<Map<ValueSymbol, Refinement>> scopedRefinements = new ArrayList<>();
-    private final TypeInferrer inferrer = new TypeInferrer(true, scopedRefinements);
+    private final TypeInferrer inferrer = new TypeInferrer(true, true, scopedRefinements);
     private final SymbolRefiner refiner = new SymbolRefiner();
     private final TypeContext context = TypeContext.instance;
 
@@ -34,23 +33,28 @@ public class TypeChecker {
     }
 
     private class NodeHandler extends NodeVisitor<Void> {
-        private Type infer(ExpressionNode node) throws CompilerError {
-            if (!node.hasInferredType()) {
-                Type type = inferrer.infer(node);
-                if (type instanceof InferenceType) {
-                    throw node.error(module, "Could not infer type: " + type);
-                }
-                node.setInferredType(type);
-                return type;
-            } else {
+        // Analyzes node and returns its inferred type
+        private Type checkAndInfer(ExpressionNode node) throws CompilerError {
+            node.accept(this);
+            Type type = inferType(node);
+            assert !(type instanceof InferenceType);
+            return type;
+        }
+
+        // Infers type of node
+        private Type inferType(ExpressionNode node) throws CompilerError {
+            if (node.hasInferredType()) {
                 return node.getInferredType();
+            } else {
+                return inferrer.infer(node);
             }
         }
 
         @Override
         public Void defaultHandler(Node node) throws CompilerError {
             if (node instanceof ExpressionNode expressionNode) {
-                infer(expressionNode);
+                Type type = inferType(expressionNode);
+                assert !(type instanceof InferenceType);
             } else {
                 node.acceptChildren(this);
             }
@@ -71,7 +75,7 @@ public class TypeChecker {
 
         public Void visit(VariableNode node) throws CompilerError {
             if (node.initialValue != null) {
-                Type initialValue = infer(node.initialValue);
+                Type initialValue = checkAndInfer(node.initialValue);
                 if (node.symbol.type instanceof InferenceType) {
                     node.symbol.setType(initialValue);
                 }
@@ -86,7 +90,7 @@ public class TypeChecker {
         }
 
         public Void visit(AssignmentStatementNode node) throws CompilerError {
-            Type value = infer(node.value);
+            Type value = checkAndInfer(node.value);
             Type target = targetHandler.infer(node.target);
             if (!isAssignableTo(target, value)) {
                 throw node.error(module, String.format("Cannot assign `%s` value to `%s` target", value, target));
@@ -94,7 +98,7 @@ public class TypeChecker {
 
             if (node.target instanceof IdentifierNode identifierTarget) {
                 if (identifierTarget.symbol instanceof LocalValueSymbol localValueSymbolTarget) {
-                    scopedRefinements.getLast().put(localValueSymbolTarget, new IsInstanceRefinement(value));
+                    scopedRefinements.getLast().put(localValueSymbolTarget, new Refinement(value));
                 }
             }
 
@@ -121,7 +125,7 @@ public class TypeChecker {
         }
 
         private void visitCondition(ExpressionNode node) throws CompilerError {
-            Type condition = infer(node);
+            Type condition = checkAndInfer(node);
             if (!isAssignableTo(context.BOOL, condition)) {
                 String err = String.format("Cannot use `%s` value as condition of type `%s`",
                         condition, context.BOOL);
@@ -135,7 +139,7 @@ public class TypeChecker {
         }
 
         public Void visit(ExpressionStatementNode node) throws CompilerError {
-            infer(node.expression);
+            checkAndInfer(node.expression);
             return null;
         }
 
@@ -144,7 +148,7 @@ public class TypeChecker {
                 throw node.error(module, "Return statement cannot be used outside of function body");
             }
 
-            Type value = node.value == null ? context.NULL : infer(node.value);
+            Type value = node.value == null ? context.NULL : checkAndInfer(node.value);
             if (!isAssignableTo(function.symbol.type.returnType, value)) {
                 String err = String.format("Cannot use `%s` value as `%s` value in return from '%s'",
                         value, function.symbol.type.returnType, function.name);
@@ -155,10 +159,10 @@ public class TypeChecker {
 
         @Override
         public Void visit(BinaryOperationNode node) throws CompilerError {
-            Type left = infer(node.left);
-            Type right = infer(node.right);
+            Type left = checkAndInfer(node.left);
+            Type right = checkAndInfer(node.right);
             boolean argsOk = !left.isError() & !right.isError();
-            boolean ok = infer(node).isError();
+            boolean ok = !inferType(node).isError();
 
             if (argsOk && !ok) {
                 String err = String.format("Cannot apply operator %s on values of types `%s` and `%s`",
@@ -171,7 +175,7 @@ public class TypeChecker {
 
         @Override
         public Void visit(CallNode node) throws CompilerError {
-            Type calledType = infer(node.function);
+            Type calledType = checkAndInfer(node.function);
             FunctionType function = switch (calledType) {
                 case FunctionType functionType
                         -> functionType;
@@ -190,7 +194,7 @@ public class TypeChecker {
             }
 
             for (int i = 0; i < function.parameterTypes.size(); i++) {
-                Type argument = infer(node.arguments.get(i));
+                Type argument = checkAndInfer(node.arguments.get(i));
                 if (argument.isError()) {
                     continue;
                 }
@@ -242,9 +246,7 @@ public class TypeChecker {
     private class TargetNodeHandler extends NodeVisitor<Type> {
         private Type infer(ExpressionNode node) throws CompilerError {
             assert !node.hasInferredType();
-            Type type = node.accept(this);
-            node.setInferredType(type);
-            return type;
+            return node.accept(this);
         }
 
         @Override
@@ -254,13 +256,14 @@ public class TypeChecker {
 
         @Override
         public Type visit(MemberNode node) throws CompilerError {
-            handler.infer(node.object);
             return inferrer.infer(node);
         }
 
         @Override
         public Type visit(IdentifierNode node) {
-            return inferrer.infer(node.symbol);
+            Type type = inferrer.infer(node.symbol);
+            node.setInferredType(type);
+            return type;
         }
     }
 }

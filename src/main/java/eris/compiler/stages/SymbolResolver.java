@@ -4,7 +4,6 @@ import eris.compiler.BuildModule;
 import eris.compiler.CompilerError;
 import eris.compiler.TypeContext;
 import eris.compiler.ast.*;
-import eris.compiler.refinement.Refinement;
 import eris.compiler.symbol.*;
 import eris.compiler.type.FunctionType;
 import eris.compiler.type.Type;
@@ -18,7 +17,7 @@ public class SymbolResolver {
     private final ScopeHandler scopeHandler = new ScopeHandler();
     private final NodeHandler nodeHandler = new NodeHandler();
     private final TypeBuilder typeBuilder = new TypeBuilder();
-    private final TypeInferrer typeInferrer = new TypeInferrer(false);
+    private final TypeInferrer typeInferrer = new TypeInferrer(false, false);
 
     public SymbolResolver(BuildModule module) {
         this.module = module;
